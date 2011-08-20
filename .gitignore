@@ -1,0 +1,27 @@
+# os x finder
+.DS_Store
+
+# xcode 3
+*.mode1v3
+*.pbxuser
+
+# xcode 4
+xcuserdata
+
+# svn
+.svn
+
+# emacs backup files
+*~
+
+# build directory
+build
+
+# some artifacts
+*.o
+*.lev
+
+# some results of applying diff
+*.rej
+*.orig
+
