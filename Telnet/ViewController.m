@@ -7,6 +7,8 @@
 //
 
 #import "ViewController.h"
+#import "TelnetConnection.h"
+#import "TerminalView.h"
 
 @implementation ViewController
 
@@ -22,6 +24,21 @@
 {
     [super viewDidLoad];
 	// Do any additional setup after loading the view, typically from a nib.
+    
+    TerminalView *terminalView = [[TerminalView alloc] initWithFrame:CGRectMake(0.f, 0.f, 0.f, 0.f)];
+    [self.view addSubview:terminalView];
+    CGFloat termWidth = terminalView.frame.size.width;
+    
+    CGRect terminalRect = terminalView.frame;
+    terminalRect.origin.x = (768 - termWidth) / 2;
+    terminalRect.origin.y = terminalRect.origin.x;
+    terminalView.frame = terminalRect;
+
+    connection = [[TelnetConnection alloc] init];
+    connection.displayDelegate = terminalView;
+    [connection open:@"mud.genesismud.org" port:3011];
+//    [connection open:@"nethack.alt.org" port:23];
+
 }
 
 - (void)viewDidUnload

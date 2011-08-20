@@ -8,6 +8,11 @@
 
 #import <UIKit/UIKit.h>
 
-@interface ViewController : UIViewController
+@class TelnetConnection;
+
+@interface ViewController : UIViewController {
+    
+    TelnetConnection *connection;
+}
 
 @end

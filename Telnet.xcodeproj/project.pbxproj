@@ -14,21 +14,37 @@
 		66AE054813FFC51900DF9D41 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 66AE054713FFC51900DF9D41 /* AppDelegate.m */; };
 		66AE054B13FFC51900DF9D41 /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 66AE054A13FFC51900DF9D41 /* ViewController.m */; };
 		66AE054E13FFC51900DF9D41 /* ViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 66AE054C13FFC51900DF9D41 /* ViewController.xib */; };
+		66AE055713FFC53D00DF9D41 /* GCDAsyncSocket.m in Sources */ = {isa = PBXBuildFile; fileRef = 66AE055613FFC53D00DF9D41 /* GCDAsyncSocket.m */; };
+		66AE055913FFC58400DF9D41 /* CFNetwork.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 66AE055813FFC58400DF9D41 /* CFNetwork.framework */; };
+		66AE055C13FFC60100DF9D41 /* TelnetConnection.m in Sources */ = {isa = PBXBuildFile; fileRef = 66AE055B13FFC60100DF9D41 /* TelnetConnection.m */; };
+		66AE056913FFE49400DF9D41 /* TerminalView.m in Sources */ = {isa = PBXBuildFile; fileRef = 66AE056813FFE49400DF9D41 /* TerminalView.m */; };
+		66AE056C13FFE4B200DF9D41 /* NoAALabel.m in Sources */ = {isa = PBXBuildFile; fileRef = 66AE056B13FFE4B200DF9D41 /* NoAALabel.m */; };
+		66AE056E13FFE51200DF9D41 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 66AE056D13FFE51200DF9D41 /* CoreGraphics.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		66AE053513FFC51900DF9D41 /* Telnet.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Telnet.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		66AE053913FFC51900DF9D41 /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
 		66AE053B13FFC51900DF9D41 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
-		66AE053F13FFC51900DF9D41 /* Telnet-Info.plist */ = {isa = PBXFileReference; path = "Telnet-Info.plist"; sourceTree = "<group>"; };
+		66AE053F13FFC51900DF9D41 /* Telnet-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "Telnet-Info.plist"; sourceTree = "<group>"; };
 		66AE054113FFC51900DF9D41 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		66AE054313FFC51900DF9D41 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
-		66AE054513FFC51900DF9D41 /* Telnet-Prefix.pch */ = {isa = PBXFileReference; path = "Telnet-Prefix.pch"; sourceTree = "<group>"; };
-		66AE054613FFC51900DF9D41 /* AppDelegate.h */ = {isa = PBXFileReference; path = AppDelegate.h; sourceTree = "<group>"; };
+		66AE054513FFC51900DF9D41 /* Telnet-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Telnet-Prefix.pch"; sourceTree = "<group>"; };
+		66AE054613FFC51900DF9D41 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		66AE054713FFC51900DF9D41 /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
-		66AE054913FFC51900DF9D41 /* ViewController.h */ = {isa = PBXFileReference; path = ViewController.h; sourceTree = "<group>"; };
+		66AE054913FFC51900DF9D41 /* ViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ViewController.h; sourceTree = "<group>"; };
 		66AE054A13FFC51900DF9D41 /* ViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ViewController.m; sourceTree = "<group>"; };
 		66AE054D13FFC51900DF9D41 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/ViewController.xib; sourceTree = "<group>"; };
+		66AE055513FFC53D00DF9D41 /* GCDAsyncSocket.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GCDAsyncSocket.h; sourceTree = "<group>"; };
+		66AE055613FFC53D00DF9D41 /* GCDAsyncSocket.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GCDAsyncSocket.m; sourceTree = "<group>"; };
+		66AE055813FFC58400DF9D41 /* CFNetwork.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CFNetwork.framework; path = System/Library/Frameworks/CFNetwork.framework; sourceTree = SDKROOT; };
+		66AE055A13FFC60100DF9D41 /* TelnetConnection.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TelnetConnection.h; path = "Telnet Connection/TelnetConnection.h"; sourceTree = "<group>"; };
+		66AE055B13FFC60100DF9D41 /* TelnetConnection.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = TelnetConnection.m; path = "Telnet Connection/TelnetConnection.m"; sourceTree = "<group>"; };
+		66AE056713FFE49400DF9D41 /* TerminalView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TerminalView.h; sourceTree = "<group>"; };
+		66AE056813FFE49400DF9D41 /* TerminalView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TerminalView.m; sourceTree = "<group>"; };
+		66AE056A13FFE4B200DF9D41 /* NoAALabel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NoAALabel.h; sourceTree = "<group>"; };
+		66AE056B13FFE4B200DF9D41 /* NoAALabel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NoAALabel.m; sourceTree = "<group>"; };
+		66AE056D13FFE51200DF9D41 /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -36,6 +52,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				66AE056E13FFE51200DF9D41 /* CoreGraphics.framework in Frameworks */,
+				66AE055913FFC58400DF9D41 /* CFNetwork.framework in Frameworks */,
 				66AE053A13FFC51900DF9D41 /* UIKit.framework in Frameworks */,
 				66AE053C13FFC51900DF9D41 /* Foundation.framework in Frameworks */,
 			);
@@ -47,6 +65,8 @@
 		66AE052A13FFC51900DF9D41 = {
 			isa = PBXGroup;
 			children = (
+				66AE056D13FFE51200DF9D41 /* CoreGraphics.framework */,
+				66AE055813FFC58400DF9D41 /* CFNetwork.framework */,
 				66AE053D13FFC51900DF9D41 /* Telnet */,
 				66AE053813FFC51900DF9D41 /* Frameworks */,
 				66AE053613FFC51900DF9D41 /* Products */,
@@ -73,6 +93,9 @@
 		66AE053D13FFC51900DF9D41 /* Telnet */ = {
 			isa = PBXGroup;
 			children = (
+				66AE056613FFE48300DF9D41 /* Terminal */,
+				66AE055D13FFC60500DF9D41 /* Telnet Connection */,
+				66AE055413FFC53D00DF9D41 /* GCDAsyncSocket */,
 				66AE054613FFC51900DF9D41 /* AppDelegate.h */,
 				66AE054713FFC51900DF9D41 /* AppDelegate.m */,
 				66AE054913FFC51900DF9D41 /* ViewController.h */,
@@ -92,6 +115,35 @@
 				66AE054513FFC51900DF9D41 /* Telnet-Prefix.pch */,
 			);
 			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+		66AE055413FFC53D00DF9D41 /* GCDAsyncSocket */ = {
+			isa = PBXGroup;
+			children = (
+				66AE055513FFC53D00DF9D41 /* GCDAsyncSocket.h */,
+				66AE055613FFC53D00DF9D41 /* GCDAsyncSocket.m */,
+			);
+			path = GCDAsyncSocket;
+			sourceTree = "<group>";
+		};
+		66AE055D13FFC60500DF9D41 /* Telnet Connection */ = {
+			isa = PBXGroup;
+			children = (
+				66AE055A13FFC60100DF9D41 /* TelnetConnection.h */,
+				66AE055B13FFC60100DF9D41 /* TelnetConnection.m */,
+			);
+			name = "Telnet Connection";
+			sourceTree = "<group>";
+		};
+		66AE056613FFE48300DF9D41 /* Terminal */ = {
+			isa = PBXGroup;
+			children = (
+				66AE056A13FFE4B200DF9D41 /* NoAALabel.h */,
+				66AE056B13FFE4B200DF9D41 /* NoAALabel.m */,
+				66AE056713FFE49400DF9D41 /* TerminalView.h */,
+				66AE056813FFE49400DF9D41 /* TerminalView.m */,
+			);
+			name = Terminal;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -159,6 +211,10 @@
 				66AE054413FFC51900DF9D41 /* main.m in Sources */,
 				66AE054813FFC51900DF9D41 /* AppDelegate.m in Sources */,
 				66AE054B13FFC51900DF9D41 /* ViewController.m in Sources */,
+				66AE055713FFC53D00DF9D41 /* GCDAsyncSocket.m in Sources */,
+				66AE055C13FFC60100DF9D41 /* TelnetConnection.m in Sources */,
+				66AE056913FFE49400DF9D41 /* TerminalView.m in Sources */,
+				66AE056C13FFE4B200DF9D41 /* NoAALabel.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
