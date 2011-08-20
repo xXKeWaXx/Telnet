@@ -1,0 +1,279 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		66AE053A13FFC51900DF9D41 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 66AE053913FFC51900DF9D41 /* UIKit.framework */; };
+		66AE053C13FFC51900DF9D41 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 66AE053B13FFC51900DF9D41 /* Foundation.framework */; };
+		66AE054213FFC51900DF9D41 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 66AE054013FFC51900DF9D41 /* InfoPlist.strings */; };
+		66AE054413FFC51900DF9D41 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 66AE054313FFC51900DF9D41 /* main.m */; };
+		66AE054813FFC51900DF9D41 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 66AE054713FFC51900DF9D41 /* AppDelegate.m */; };
+		66AE054B13FFC51900DF9D41 /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 66AE054A13FFC51900DF9D41 /* ViewController.m */; };
+		66AE054E13FFC51900DF9D41 /* ViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 66AE054C13FFC51900DF9D41 /* ViewController.xib */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		66AE053513FFC51900DF9D41 /* Telnet.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Telnet.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		66AE053913FFC51900DF9D41 /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
+		66AE053B13FFC51900DF9D41 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
+		66AE053F13FFC51900DF9D41 /* Telnet-Info.plist */ = {isa = PBXFileReference; path = "Telnet-Info.plist"; sourceTree = "<group>"; };
+		66AE054113FFC51900DF9D41 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		66AE054313FFC51900DF9D41 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
+		66AE054513FFC51900DF9D41 /* Telnet-Prefix.pch */ = {isa = PBXFileReference; path = "Telnet-Prefix.pch"; sourceTree = "<group>"; };
+		66AE054613FFC51900DF9D41 /* AppDelegate.h */ = {isa = PBXFileReference; path = AppDelegate.h; sourceTree = "<group>"; };
+		66AE054713FFC51900DF9D41 /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
+		66AE054913FFC51900DF9D41 /* ViewController.h */ = {isa = PBXFileReference; path = ViewController.h; sourceTree = "<group>"; };
+		66AE054A13FFC51900DF9D41 /* ViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ViewController.m; sourceTree = "<group>"; };
+		66AE054D13FFC51900DF9D41 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/ViewController.xib; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		66AE053213FFC51900DF9D41 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				66AE053A13FFC51900DF9D41 /* UIKit.framework in Frameworks */,
+				66AE053C13FFC51900DF9D41 /* Foundation.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		66AE052A13FFC51900DF9D41 = {
+			isa = PBXGroup;
+			children = (
+				66AE053D13FFC51900DF9D41 /* Telnet */,
+				66AE053813FFC51900DF9D41 /* Frameworks */,
+				66AE053613FFC51900DF9D41 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		66AE053613FFC51900DF9D41 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				66AE053513FFC51900DF9D41 /* Telnet.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		66AE053813FFC51900DF9D41 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				66AE053913FFC51900DF9D41 /* UIKit.framework */,
+				66AE053B13FFC51900DF9D41 /* Foundation.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		66AE053D13FFC51900DF9D41 /* Telnet */ = {
+			isa = PBXGroup;
+			children = (
+				66AE054613FFC51900DF9D41 /* AppDelegate.h */,
+				66AE054713FFC51900DF9D41 /* AppDelegate.m */,
+				66AE054913FFC51900DF9D41 /* ViewController.h */,
+				66AE054A13FFC51900DF9D41 /* ViewController.m */,
+				66AE054C13FFC51900DF9D41 /* ViewController.xib */,
+				66AE053E13FFC51900DF9D41 /* Supporting Files */,
+			);
+			path = Telnet;
+			sourceTree = "<group>";
+		};
+		66AE053E13FFC51900DF9D41 /* Supporting Files */ = {
+			isa = PBXGroup;
+			children = (
+				66AE053F13FFC51900DF9D41 /* Telnet-Info.plist */,
+				66AE054013FFC51900DF9D41 /* InfoPlist.strings */,
+				66AE054313FFC51900DF9D41 /* main.m */,
+				66AE054513FFC51900DF9D41 /* Telnet-Prefix.pch */,
+			);
+			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		66AE053413FFC51900DF9D41 /* Telnet */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 66AE055113FFC51900DF9D41 /* Build configuration list for PBXNativeTarget "Telnet" */;
+			buildPhases = (
+				66AE053113FFC51900DF9D41 /* Sources */,
+				66AE053213FFC51900DF9D41 /* Frameworks */,
+				66AE053313FFC51900DF9D41 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = Telnet;
+			productName = Telnet;
+			productReference = 66AE053513FFC51900DF9D41 /* Telnet.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		66AE052C13FFC51900DF9D41 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0420;
+			};
+			buildConfigurationList = 66AE052F13FFC51900DF9D41 /* Build configuration list for PBXProject "Telnet" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+			);
+			mainGroup = 66AE052A13FFC51900DF9D41;
+			productRefGroup = 66AE053613FFC51900DF9D41 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				66AE053413FFC51900DF9D41 /* Telnet */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		66AE053313FFC51900DF9D41 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				66AE054213FFC51900DF9D41 /* InfoPlist.strings in Resources */,
+				66AE054E13FFC51900DF9D41 /* ViewController.xib in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		66AE053113FFC51900DF9D41 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				66AE054413FFC51900DF9D41 /* main.m in Sources */,
+				66AE054813FFC51900DF9D41 /* AppDelegate.m in Sources */,
+				66AE054B13FFC51900DF9D41 /* ViewController.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXVariantGroup section */
+		66AE054013FFC51900DF9D41 /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				66AE054113FFC51900DF9D41 /* en */,
+			);
+			name = InfoPlist.strings;
+			sourceTree = "<group>";
+		};
+		66AE054C13FFC51900DF9D41 /* ViewController.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				66AE054D13FFC51900DF9D41 /* en */,
+			);
+			name = ViewController.xib;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		66AE054F13FFC51900DF9D41 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
+				CLANG_ENABLE_OBJC_ARC = YES;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				COPY_PHASE_STRIP = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 5.0;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = 2;
+			};
+			name = Debug;
+		};
+		66AE055013FFC51900DF9D41 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
+				CLANG_ENABLE_OBJC_ARC = YES;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				COPY_PHASE_STRIP = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 5.0;
+				OTHER_CFLAGS = "-DNS_BLOCK_ASSERTIONS=1";
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = 2;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		66AE055213FFC51900DF9D41 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "Telnet/Telnet-Prefix.pch";
+				INFOPLIST_FILE = "Telnet/Telnet-Info.plist";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				WRAPPER_EXTENSION = app;
+			};
+			name = Debug;
+		};
+		66AE055313FFC51900DF9D41 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "Telnet/Telnet-Prefix.pch";
+				INFOPLIST_FILE = "Telnet/Telnet-Info.plist";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				WRAPPER_EXTENSION = app;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		66AE052F13FFC51900DF9D41 /* Build configuration list for PBXProject "Telnet" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				66AE054F13FFC51900DF9D41 /* Debug */,
+				66AE055013FFC51900DF9D41 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		66AE055113FFC51900DF9D41 /* Build configuration list for PBXNativeTarget "Telnet" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				66AE055213FFC51900DF9D41 /* Debug */,
+				66AE055313FFC51900DF9D41 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 66AE052C13FFC51900DF9D41 /* Project object */;
+}
