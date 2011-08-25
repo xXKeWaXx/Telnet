@@ -11,93 +11,118 @@
 
 @implementation TerminalView
 
-// change the frames of all glyphs so they all move up one "line" except for the top row, which has its contents cleared
-// and becomes the bottom line
 - (void)scrollUp {
+
+    static int scrolledUp = 0;
     
-    NSLog(@"Scrolling up");
+    NSLog(@"Scrolled up %d times", scrolledUp++);
     
+    NSMutableArray *topLine = [terminalRows objectAtIndex:0];
+    [terminalRows removeObjectAtIndex:0];
+
+    // alter top line to become bottom line, text is cleared and frame.origin.y set
     CGRect glyphFrame;
-    for(UILabel *glyph in glyphs) {
-        
-        if(glyph.frame.origin.y == 0) {
-            
-            // top row - gets cleared
-            glyph.text = nil;
-            glyph.textColor = [UIColor yellowColor];
-            // and moved to the bottom row
-            glyphFrame = glyph.frame;
-            glyphFrame.origin.y = kGlyphHeight * (kTerminalRows - 1);
-            glyph.frame = glyphFrame;
-            
-/*
-            if(glyph.frame.origin.x < 1.f)
-                NSLog(@"Moving top line to bottom: glyphs at y=%f to ypos %f", 0.f, glyph.frame.origin.y);
-*/            
-        } else {
-            
-            // all other rows just get moved up one
-            glyphFrame = glyph.frame;
-            CGFloat initialYPos = glyph.frame.origin.y;
-            glyphFrame.origin.y -= kGlyphHeight;
-            glyph.frame = glyphFrame;
-/*
-            if(glyph.frame.origin.x < 1.f)
-                NSLog(@"Moving line up: glyphs at y=%f to ypos %f", initialYPos, glyph.frame.origin.y);
-*/
-        }
+    CGFloat rowYOrigin = kGlyphHeight * (kTerminalRows - 1);
+    for(UILabel* glyph in topLine) {
+        glyph.text = nil;
+        glyphFrame = glyph.frame;
+        glyphFrame.origin.y = rowYOrigin;
+        glyph.frame = glyphFrame;
     }
+    // alter frame of all other lines so that they move up one line
+    rowYOrigin = 0.f;
+    for(NSMutableArray *array in terminalRows) {
+        for(UILabel* glyph in array) {
+            glyphFrame = glyph.frame;
+            glyphFrame.origin.y = rowYOrigin;
+            glyph.frame = glyphFrame;
+        }
+        rowYOrigin += kGlyphHeight;
+    }
+    // add the bottom line
+    [terminalRows addObject:topLine];
 }
 
-- (void)incrementCursorLine {
+- (void)cursorMoveToRow:(int)toRow toCol:(int)toCol {
+    
+    cursor.backgroundColor = [UIColor blackColor];
+    cursor = [[terminalRows objectAtIndex:toRow] objectAtIndex:toCol];
+    cursor.backgroundColor = [UIColor grayColor];
+}
 
-    if(cursorLine < kTerminalRows - 1) {
-        cursorLine++;
-    } else {
-        NSLog(@"Scrolling up, cursor line remains %d", cursorLine);
-        [self scrollUp];
+- (void)incrementCursorRow {
+
+    if(cursorRow < kTerminalRows - 1) {
+        cursorRow++;
+    } 
+    else {
+       [self scrollUp];
     }
+    [self cursorMoveToRow:cursorRow toCol:cursorColumn];
 }
 
 - (void)incrementCursorColumn {
     
-    if(cursorColumn < kTerminalColumns - 1)
+    if(cursorColumn < kTerminalColumns - 1) {
         cursorColumn++;
+        [self cursorMoveToRow:cursorRow toCol:cursorColumn];
+    }
+}
+
+- (void)processDataChunk {
+    
+    unsigned char *c = (unsigned char *)[dataForDisplay bytes];
+    int len = [dataForDisplay length];
+    
+    // count determines how many characters will be displayed before allowing the run loop to update display
+    int count = kTerminalColumns;
+
+    while(--count && len--)  {
+        
+        unsigned char d = *c++;
+        switch(d) {
+            case kNVTSpecialCharNUL:
+                break;
+            case kNVTSpecialCharLF:
+                [self incrementCursorRow];
+                break;
+            case kNVTSpecialCharCR:
+                cursorColumn = 0;
+                [self cursorMoveToRow:cursorRow toCol:cursorColumn];
+
+                break;
+            default:
+            {
+                UILabel *glyph = [[terminalRows objectAtIndex:cursorRow] objectAtIndex:cursorColumn];
+                glyph.text = [NSString stringWithFormat:@"%c", d];
+                [self incrementCursorColumn];
+            }
+                break;
+        }
+    }
+    
+    if(len > 0) {
+        
+        dataForDisplay = [NSMutableData dataWithBytes:c length:len];
+        
+        // more data to display, allow run loop to continue and return here
+        [self performSelector:@selector(processDataChunk) withObject:nil afterDelay:0.1f];
+    } else {
+        dataForDisplay = nil;
+    }
 }
 
 // display each of the bytes in the view advancing cursor position
 - (void)displayData:(NSData *)data {
     
-    unsigned char *c = (unsigned char *)[data bytes];
-    int len = [data length];
-    
-    NSLog(@"Before data processing: %d,%d", cursorColumn, cursorLine);
-    
-    while(len--) {
+    if(dataForDisplay == nil)
+        dataForDisplay = [data mutableCopy];
+    else
+        [dataForDisplay appendData:data];
 
-        // get the label at the current cursor position
-        UILabel *glyph = [glyphs objectAtIndex:(kTerminalColumns * cursorLine) + cursorColumn];
-        unsigned char d = *c++;
-        
-        switch(d) {
-            case kNVTSpecialCharNUL:
-                // do nothing
-                break;
-            case kNVTSpecialCharLF:
-                [self incrementCursorLine];
-                break;
-            case kNVTSpecialCharCR:
-                cursorColumn = 0;
-                break;
-            default:
-                glyph.text = [NSString stringWithFormat:@"%c", d];
-                [self incrementCursorColumn];
-                break;
-        }
-    }
-    
-    NSLog(@"After data processing: %d,%d", cursorColumn, cursorLine);
-
+    // processDataChunk is a method that can proceed with display until it should break,
+    // e.g. to facilitate terminal animation or other ancient tricks.
+    [self processDataChunk];
 }
 
 - (id)initWithFrame:(CGRect)frame
@@ -105,25 +130,31 @@
     self = [super initWithFrame:frame];
     if (self) {
 
-        NSMutableArray *createdGlyphs = [[NSMutableArray alloc] initWithCapacity:80*25];
-        
+        terminalRows = [NSMutableArray array];
+        NSMutableArray *terminalRow;
         CGFloat xPos;
         CGFloat yPos;
+        int i, j;
         
-        for(int i = 0; i < kTerminalRows*kTerminalColumns; i++) {
+        for(i = 0; i < kTerminalRows; i++) {
             
-            xPos = (CGFloat)(i % kTerminalColumns) * kGlyphWidth;
-            yPos = (CGFloat)(i / kTerminalColumns) * kGlyphHeight;
-
-            UILabel *glyph = [[NoAALabel alloc] initWithFrame:CGRectMake(xPos, yPos, kGlyphWidth, kGlyphHeight)];
-
-            glyph.font = [UIFont fontWithName:@"Courier New" size:kGlyphFontSize];
+            terminalRow = [NSMutableArray array];
+            yPos = (CGFloat)(i * kGlyphHeight);
             
-            glyph.textColor = [UIColor whiteColor];
-            glyph.backgroundColor = [UIColor blackColor];
-            glyph.text = nil;
-            [createdGlyphs addObject:glyph];
-            [self addSubview:glyph];
+            for(j = 0; j < kTerminalColumns; j++) {
+                
+                xPos = (CGFloat)(j * kGlyphWidth);
+                
+                UILabel *glyph = [[NoAALabel alloc] initWithFrame:CGRectMake(xPos, yPos, kGlyphWidth, kGlyphHeight)];
+                glyph.font = [UIFont fontWithName:@"Courier New" size:kGlyphFontSize];
+                glyph.textColor = [UIColor whiteColor];
+                glyph.backgroundColor = [UIColor blackColor];
+                glyph.text = nil;
+
+                [terminalRow addObject:glyph];
+                [self addSubview:glyph];
+            }
+            [terminalRows addObject:terminalRow];
         }
         
         CGRect selfFrame = self.frame;
@@ -131,8 +162,12 @@
         selfFrame.size.height = kGlyphHeight * (CGFloat)kTerminalRows;
         self.frame = selfFrame;
         
-        glyphs = (NSArray *)createdGlyphs;
-        cursorColumn = cursorLine = 0;
+        cursorColumn = cursorRow = 0;
+        
+        cursor = [[terminalRows objectAtIndex:cursorRow] objectAtIndex:cursorColumn];
+        cursor.backgroundColor = [UIColor grayColor];
+
+        dataForDisplay = [[NSMutableData alloc] init];
     }
     return self;
 }

@@ -52,15 +52,18 @@
  
 @interface TerminalView : UIView <TerminalConnectionDisplayDelegate> {
     
-    int cursorLine;
+    int cursorRow;
     int cursorColumn;
 
-    NSArray *glyphs;
+    UILabel *cursor;
+    
+    NSMutableArray *terminalRows;
     
     // blink and underscore are done by manipulating the view not the font
     NSMutableArray *underlinedGlyphs;
     NSMutableArray *blinkingGlyphs;
     
+    NSMutableData *dataForDisplay;
     
 }
 

@@ -35,6 +35,21 @@
     [_displayDelegate displayData:display];
 }
 
+#define SEND_BUFSIZE (600)
+
+- (void)read {
+    [socket readDataWithTimeout:-1 tag:readSequence++];
+
+}
+
+- (void)send:(NSString *)sendData {
+
+    const char *buf = [sendData cStringUsingEncoding:NSASCIIStringEncoding];
+
+    NSData *data = [[NSData alloc] initWithBytes:buf length:[sendData length]];
+    [socket writeData:data withTimeout:-1 tag:writeSequence++];
+}
+
 - (void)sendOption:(unsigned char)option command:(unsigned char)cmd {
     
     unsigned char commandBuf[3];
@@ -195,7 +210,9 @@
         }
     }
     
-    [_displayDelegate displayData:dataForDisplay];
+    [(NSObject *)_displayDelegate performSelectorOnMainThread:@selector(displayData:) withObject:dataForDisplay waitUntilDone:NO];
+    
+    dataForDisplay = nil;
     // look for more
     [sock readDataWithTimeout:-1 tag:readSequence++];
 }

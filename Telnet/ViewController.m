@@ -18,6 +18,18 @@
     // Release any cached data, images, etc that aren't in use.
 }
 
+#pragma - mark UITextViewDelegate
+- (BOOL)textViewShouldEndEditing:(UITextView *)textView {
+    return NO;
+}
+
+- (void)textViewDidChange:(UITextView *)textView {
+    
+    [connection send:textView.text];
+    textView.text = nil;
+}
+// UITextViewDelegate ends
+
 #pragma mark - View lifecycle
 
 - (void)viewDidLoad
@@ -34,10 +46,19 @@
     terminalRect.origin.y = terminalRect.origin.x;
     terminalView.frame = terminalRect;
 
+    inputTextView = [[UITextView alloc] initWithFrame:CGRectMake(terminalRect.origin.x, terminalRect.origin.y + terminalRect.size.height + 10, terminalRect.size.width, 18.f)];
+    inputTextView.delegate = self;
+    [self.view addSubview:inputTextView];
+    [inputTextView becomeFirstResponder];
+    
     connection = [[TelnetConnection alloc] init];
     connection.displayDelegate = terminalView;
     [connection open:@"mud.genesismud.org" port:3011];
 //    [connection open:@"nethack.alt.org" port:23];
+//    [connection open:@"batmud.bat.org" port:23];
+    [connection read];
+    [connection read];
+    [connection read];
 
 }
 

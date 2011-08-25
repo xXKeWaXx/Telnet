@@ -75,7 +75,9 @@ typedef enum _TelnetState {
 }
 
 - (void)open:(NSString *)hostName port:(unsigned long)port;
-    
+- (void)send:(NSString *)sendData;
+- (void)read;
+
 @property id<TerminalConnectionDisplayDelegate> __weak displayDelegate;
 
 @end

@@ -10,8 +10,9 @@
 
 @class TelnetConnection;
 
-@interface ViewController : UIViewController {
+@interface ViewController : UIViewController <UITextViewDelegate> {
     
+    UITextView *inputTextView;
     TelnetConnection *connection;
 }
 
