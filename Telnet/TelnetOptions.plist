@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>Telnet Options</key>
+	<dict>
+		<key>Telnet Options</key>
+		<array>
+			<dict>
+				<key>TelnetOptionNumber</key>
+				<integer>3</integer>
+				<key>TelnetOptionClassname</key>
+				<string>TelnetOptionHandler</string>
+				<key>TelnetOptionIsSupported</key>
+				<true/>
+			</dict>
+			<dict>
+				<key>TelnetOptionNumber</key>
+				<integer>24</integer>
+				<key>TelnetOptionClassname</key>
+				<string>TelnetOptionTerminalType</string>
+				<key>TelnetOptionIsSupported</key>
+				<true/>
+			</dict>
+		</array>
+	</dict>
+</dict>
+</plist>

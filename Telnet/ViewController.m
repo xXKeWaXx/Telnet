@@ -52,9 +52,11 @@
     [inputTextView becomeFirstResponder];
     
     connection = [[TelnetConnection alloc] init];
+    [connection setOptions:nil];
+
     connection.displayDelegate = terminalView;
-    [connection open:@"mud.genesismud.org" port:3011];
-//    [connection open:@"nethack.alt.org" port:23];
+//    [connection open:@"mud.genesismud.org" port:3011];
+    [connection open:@"nethack.alt.org" port:23];
 //    [connection open:@"batmud.bat.org" port:23];
     [connection read];
     [connection read];

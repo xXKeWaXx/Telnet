@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		66510FE7140BAAAA00DE90F7 /* TelnetOptionHandler.m in Sources */ = {isa = PBXBuildFile; fileRef = 66510FE6140BAAA900DE90F7 /* TelnetOptionHandler.m */; };
+		66510FED140BB84300DE90F7 /* TelnetOptionTerminalType.m in Sources */ = {isa = PBXBuildFile; fileRef = 66510FEC140BB84300DE90F7 /* TelnetOptionTerminalType.m */; };
+		66510FEF140BBACE00DE90F7 /* TelnetOptions.plist in Resources */ = {isa = PBXBuildFile; fileRef = 66510FEE140BBACE00DE90F7 /* TelnetOptions.plist */; };
 		66AE053A13FFC51900DF9D41 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 66AE053913FFC51900DF9D41 /* UIKit.framework */; };
 		66AE053C13FFC51900DF9D41 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 66AE053B13FFC51900DF9D41 /* Foundation.framework */; };
 		66AE054213FFC51900DF9D41 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 66AE054013FFC51900DF9D41 /* InfoPlist.strings */; };
@@ -23,6 +26,12 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		66510FE5140BAAA900DE90F7 /* TelnetOptionHandler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TelnetOptionHandler.h; path = "Telnet Connection/TelnetOptionHandler.h"; sourceTree = "<group>"; };
+		66510FE6140BAAA900DE90F7 /* TelnetOptionHandler.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = TelnetOptionHandler.m; path = "Telnet Connection/TelnetOptionHandler.m"; sourceTree = "<group>"; };
+		66510FE9140BB1AE00DE90F7 /* TelnetConstants.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TelnetConstants.h; path = "Telnet Connection/TelnetConstants.h"; sourceTree = "<group>"; };
+		66510FEB140BB84300DE90F7 /* TelnetOptionTerminalType.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TelnetOptionTerminalType.h; path = "Telnet Connection/OptionHandlers/TelnetOptionTerminalType.h"; sourceTree = "<group>"; };
+		66510FEC140BB84300DE90F7 /* TelnetOptionTerminalType.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = TelnetOptionTerminalType.m; path = "Telnet Connection/OptionHandlers/TelnetOptionTerminalType.m"; sourceTree = "<group>"; };
+		66510FEE140BBACE00DE90F7 /* TelnetOptions.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = TelnetOptions.plist; sourceTree = "<group>"; };
 		66AE053513FFC51900DF9D41 /* Telnet.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Telnet.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		66AE053913FFC51900DF9D41 /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
 		66AE053B13FFC51900DF9D41 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
@@ -62,6 +71,17 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		66510FEA140BB7F200DE90F7 /* Telnet Option Handler classes */ = {
+			isa = PBXGroup;
+			children = (
+				66510FE5140BAAA900DE90F7 /* TelnetOptionHandler.h */,
+				66510FE6140BAAA900DE90F7 /* TelnetOptionHandler.m */,
+				66510FEB140BB84300DE90F7 /* TelnetOptionTerminalType.h */,
+				66510FEC140BB84300DE90F7 /* TelnetOptionTerminalType.m */,
+			);
+			name = "Telnet Option Handler classes";
+			sourceTree = "<group>";
+		};
 		66AE052A13FFC51900DF9D41 = {
 			isa = PBXGroup;
 			children = (
@@ -93,6 +113,7 @@
 		66AE053D13FFC51900DF9D41 /* Telnet */ = {
 			isa = PBXGroup;
 			children = (
+				66510FEE140BBACE00DE90F7 /* TelnetOptions.plist */,
 				66AE056613FFE48300DF9D41 /* Terminal */,
 				66AE055D13FFC60500DF9D41 /* Telnet Connection */,
 				66AE055413FFC53D00DF9D41 /* GCDAsyncSocket */,
@@ -129,8 +150,10 @@
 		66AE055D13FFC60500DF9D41 /* Telnet Connection */ = {
 			isa = PBXGroup;
 			children = (
+				66510FEA140BB7F200DE90F7 /* Telnet Option Handler classes */,
 				66AE055A13FFC60100DF9D41 /* TelnetConnection.h */,
 				66AE055B13FFC60100DF9D41 /* TelnetConnection.m */,
+				66510FE9140BB1AE00DE90F7 /* TelnetConstants.h */,
 			);
 			name = "Telnet Connection";
 			sourceTree = "<group>";
@@ -198,6 +221,7 @@
 			files = (
 				66AE054213FFC51900DF9D41 /* InfoPlist.strings in Resources */,
 				66AE054E13FFC51900DF9D41 /* ViewController.xib in Resources */,
+				66510FEF140BBACE00DE90F7 /* TelnetOptions.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -215,6 +239,8 @@
 				66AE055C13FFC60100DF9D41 /* TelnetConnection.m in Sources */,
 				66AE056913FFE49400DF9D41 /* TerminalView.m in Sources */,
 				66AE056C13FFE4B200DF9D41 /* NoAALabel.m in Sources */,
+				66510FE7140BAAAA00DE90F7 /* TelnetOptionHandler.m in Sources */,
+				66510FED140BB84300DE90F7 /* TelnetOptionTerminalType.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -328,6 +354,7 @@
 				66AE055313FFC51900DF9D41 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
