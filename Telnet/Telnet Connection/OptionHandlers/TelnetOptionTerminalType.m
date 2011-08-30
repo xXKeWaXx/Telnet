@@ -16,7 +16,7 @@
     
     if(*c == kTelnetSubnegotiationSEND) {
         
-        NSLog(@"Sending terminal type DEC-VT220");
+        NSLog(@"Sending terminal type DEC-VT102");
         
         unsigned char subnegotiationStartBuf[4];
         *(subnegotiationStartBuf + 0) = kTelnetCharIAC;

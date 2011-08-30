@@ -69,35 +69,177 @@
     }
 }
 
+typedef enum _TelnetDataState {
+
+    kTelnetDataStateRest = 0,
+    kTelnetDataStateESC = 1,
+    kTelnetDataStateCSI = 2
+    
+} TelnetDataState;
+
+- (void)processCommandSequence:(NSData *)command {
+    
+    unsigned char * c = (unsigned char *)[command bytes];
+    int len = [command length];
+    
+    NSString *commandDebugString = [NSString string];
+
+    while(len--) {
+        unsigned char d = *c++;
+        if(d == 033)
+            commandDebugString = [commandDebugString stringByAppendingFormat:@"ESC "];
+        else
+            commandDebugString = [commandDebugString stringByAppendingFormat:@"%c", d];
+    }    
+    NSLog(@"command: %@", commandDebugString);
+    
+    
+}
+
 - (void)processDataChunk {
     
     unsigned char *c = (unsigned char *)[dataForDisplay bytes];
     int len = [dataForDisplay length];
+    TelnetDataState dataState = kTelnetDataStateRest;
     
-    // count determines how many characters will be displayed before allowing the run loop to update display
-    int count = kTerminalColumns;
-
-    while(--count && len--)  {
+    NSMutableData *command = [NSMutableData data];
+    BOOL continuing = YES;
+    
+    while(len-- && continuing) {
         
         unsigned char d = *c++;
-        switch(d) {
-            case kNVTSpecialCharNUL:
-                break;
-            case kNVTSpecialCharLF:
-                [self incrementCursorRow];
-                break;
-            case kNVTSpecialCharCR:
-                cursorColumn = 0;
-                [self cursorMoveToRow:cursorRow toCol:cursorColumn];
+        
+        switch(dataState) {
+                
+            case kTelnetDataStateRest: {
 
-                break;
-            default:
-            {
-                UILabel *glyph = [[terminalRows objectAtIndex:cursorRow] objectAtIndex:cursorColumn];
-                glyph.text = [NSString stringWithFormat:@"%c", d];
-                [self incrementCursorColumn];
+                // simplest case - not part of a command sequence, output a glyph
+                if(d >= 32 && d <= 126) {
+                    
+                    UILabel *glyph = [[terminalRows objectAtIndex:cursorRow] objectAtIndex:cursorColumn];
+                    glyph.text = [NSString stringWithFormat:@"%c", d];
+                    [self incrementCursorColumn];
+//                    continuing = NO;
+                    break;
+                    
+                // individual special characters
+                } else if (d == 000) { // NUL (ignored)
+                } else if (d == 005) { // ENQ transmit answerback
+                } else if (d == 007) { // BEL bell sound
+                } else if (d == 010) { // BS backspace
+                } else if (d == 011) { // HT next horizontal tab stop or right margin if no more stops exist
+                } else if (d == 012 || d == 013 || d == 014) { // LF, VT, FF line feed
+                    [self incrementCursorRow];
+                    continuing = NO;
+                } else if (d == 015) { // CR carriage return
+                    cursorColumn = 0;
+                    [self cursorMoveToRow:cursorRow toCol:cursorColumn];
+                    continuing = NO;
+                } else if (d == 016) { // SQ invoke G1 character set
+                } else if (d == 017) { // SI invoke G0 character set
+                } else if (d == 021) { // XON resume transmission
+                } else if (d == 023) { // XOFF pause transmission                    
+                } else if (d == 033) { // ESC initiate control sequence
+                    [command appendBytes:&d length:1];
+                    dataState = kTelnetDataStateESC;
+                } else if (d == 0177) { // ignored
+                }
             }
-                break;
+            break;
+                
+            case kTelnetDataStateESC: {
+                
+                if (d == 0133) { // [ - enter CSI state
+                    [command appendBytes:&d length:1];
+                    dataState = kTelnetDataStateCSI;
+                } else if (d == 033) { // ESC - discard all preceding control sequence construction, begin again
+                    command = [NSMutableData dataWithBytes:&d length:1];
+                } else if (d == 0104 || d == 0105 || d == 0115) { // D index, E newline, M reverse index
+                    [command appendBytes:&d length:1];
+                    [self processCommandSequence:command];
+                    continuing = NO;
+                } else if (d == 0101 || d == 0102 || d == 060 || d == 061 || d == 062) { // A UK, B USASCII, 0 Special graphics, 1 alt ROM, 2 alt ROM special graphics
+                    [command appendBytes:&d length:1];
+                    [self processCommandSequence:command];
+                    continuing = NO;
+                    
+                } else if (d == 067 || d == 070) { // 7 save cursor, 8 restore cursor
+                    [command appendBytes:&d length:1];
+                    [self processCommandSequence:command];
+                    continuing = NO;
+                } else if (d == 030 || d == 032) { // CAN, SUB cancel current control sequence
+                    command = nil;
+                    continuing = NO;
+                } else if (d == 050 || d == 051) { // ( G0 designator, ) G1 designator
+                    [command appendBytes:&d length:1];
+                } else {
+                    [command appendBytes:&d length:1];
+                    [self processCommandSequence:command];
+                    continuing = NO;
+                }
+            }
+            break;
+
+            case kTelnetDataStateCSI: {
+                
+                if (d == 033) { // ESC - discard all preceding control sequence construction, begin again
+                    command = [NSMutableData dataWithBytes:&d length:1];
+                } else if (d >= 060 && d <= 071) { // could be a digit giving a count for the command
+                    [command appendBytes:&d length:1];
+                } else if (d == 0101 || d == 0102 || d == 0103 || d == 0104) { // A up, B down, C left, D right
+                    [command appendBytes:&d length:1];
+                    [self processCommandSequence:command];
+                    continuing = NO;
+                } else if (d == 0154) { // l selectable modes
+                    [command appendBytes:&d length:1];
+                    [self processCommandSequence:command];
+                    continuing = NO;
+                } else if (d == 0161) { // q load LEDs
+                    [command appendBytes:&d length:1];
+                    [self processCommandSequence:command];
+                    continuing = NO;
+                } else if (d == 0170) { // x report terminal parameters
+                    [command appendBytes:&d length:1];
+                    [self processCommandSequence:command];
+                    continuing = NO;
+                } else if (d == 0146) { // f horizontal and vertical position
+                    [command appendBytes:&d length:1];
+                    [self processCommandSequence:command];
+                    continuing = NO;
+                } else if (d == 0162) { // r set top and bottom margins
+                    [command appendBytes:&d length:1];
+                    [self processCommandSequence:command];
+                    continuing = NO;
+                } else if (d == 0057) { // / reset mode
+                    [command appendBytes:&d length:1];
+                    [self processCommandSequence:command];
+                    continuing = NO;
+                } else if (d == 0150) { // h set mode
+                    [command appendBytes:&d length:1];
+                    [self processCommandSequence:command];
+                    continuing = NO;
+                } else if (d == 0156) { // n status report
+                    [command appendBytes:&d length:1];
+                    [self processCommandSequence:command];
+                    continuing = NO;
+                } else if (d == 0143) { // c what are you?
+                    [command appendBytes:&d length:1];
+                    [self processCommandSequence:command];
+                    continuing = NO;
+                } else if (d == 0155) { // m set character attributes
+                    [command appendBytes:&d length:1];
+                    [self processCommandSequence:command];
+                    continuing = NO;
+                } else if (d == 073) { // ; - a compound command
+                    [command appendBytes:&d length:1];
+                } else if (d == 0112 || d == 0113) { // J line erase, K screen erase
+                    [command appendBytes:&d length:1];
+                    [self processCommandSequence:command];
+                    continuing = NO;
+                }
+            }
+            break;
+
         }
     }
     
@@ -106,7 +248,7 @@
         dataForDisplay = [NSMutableData dataWithBytes:c length:len];
         
         // more data to display, allow run loop to continue and return here
-        [self performSelector:@selector(processDataChunk) withObject:nil afterDelay:0.1f];
+        [self performSelector:@selector(processDataChunk) withObject:nil afterDelay:0.0f];
     } else {
         dataForDisplay = nil;
     }
