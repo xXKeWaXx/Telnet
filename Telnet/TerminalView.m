@@ -11,6 +11,17 @@
 
 @implementation TerminalView
 
+@synthesize cursor;
+@synthesize terminalRows;
+@synthesize windowBegins;
+@synthesize windowEnds;
+@synthesize textIsBright;
+@synthesize textIsDim;
+@synthesize textIsUnderscore;
+@synthesize textIsBlink;
+@synthesize textIsReverse;
+@synthesize textIsHidden;
+
 - (void)scrollUp {
 
     static int scrolledUp = 0;
@@ -77,23 +88,194 @@ typedef enum _TelnetDataState {
     
 } TelnetDataState;
 
+typedef enum _CommandState {
+    kCommandStart,
+    kCommandNumeric
+} CommandState;
+
+typedef void (^CommandSequenceHandler)(NSArray *, TerminalView *term);
+
+static void (^cursorMoveDown)(NSArray *, TerminalView *) = ^(NSArray *numericValues, TerminalView *term) { 
+    
+    int rows = [[numericValues objectAtIndex:0] intValue];
+    for(int i = 0; i < rows; i++) {
+        [term incrementCursorRow];
+    }
+};
+static void (^setTextAttributes)(NSArray *, TerminalView *) = ^(NSArray *numericValues, TerminalView *term) { 
+
+    for(NSNumber *number in numericValues) {
+        int value = [number intValue];
+        switch(value) {
+            case kTextAtributeClear:
+                term.textIsBright = NO;
+                term.textIsDim = NO;
+                term.textIsUnderscore = NO;
+                term.textIsBlink = NO;
+                term.textIsReverse = NO;
+                term.textIsHidden = NO;
+                
+            case kTextAttributeBright:
+                term.textIsBright = YES;
+                term.textIsDim = NO;
+                break;
+            case kTextAttributeDim:
+                term.textIsDim = YES;
+                term.textIsBright = NO;
+                break;
+            case kTextAttributeUnderscore:
+                term.textIsUnderscore = YES;
+                break;
+            case kTextAttributeBlink:
+                term.textIsBlink = YES;
+                break;
+            case kTextAttributeReverse:
+                term.textIsReverse = YES;
+                break;
+            case kTextAttributeHidden:
+                term.textIsHidden = YES;
+                break;
+            default:
+                break;
+        }
+    }
+};
+
+static void (^setWindow)(NSArray *, TerminalView *) = ^(NSArray *numericValues, TerminalView *term) { 
+    term.windowBegins = [[numericValues objectAtIndex:0] intValue];
+    term.windowEnds = [[numericValues objectAtIndex:1] intValue];
+};
+
+static void (^doClearLine)(NSArray *, TerminalView *) = ^(NSArray *numericValues, TerminalView *term) { 
+    
+    int argument = [[numericValues objectAtIndex:0] intValue];
+    NSArray *columns;
+    
+    switch(argument) {
+        case 0: // clear screen from cursor down
+            // clear from cursor to end of line
+            columns = [term.terminalRows objectAtIndex:term.cursor.row];
+            for(int i = term.cursor.column; i < kTerminalColumns; i++) {
+                NoAALabel *glyph = [columns objectAtIndex:i];
+                [glyph erase];
+            }
+            // then clear all rows below
+            for(int i = term.cursor.row; i < kTerminalRows; i++) {
+                NSArray *rowArray = [term.terminalRows objectAtIndex:i];
+                for(NoAALabel *glyph in rowArray) {
+                    [glyph erase];
+                }
+            }
+            break;
+        case 1: // clear screen from cursor up
+            // clear all rows above
+            for(int i = 0; i < term.cursor.row; i++) {
+                NSArray *rowArray = [term.terminalRows objectAtIndex:i];
+                for(NoAALabel *glyph in rowArray) {
+                    [glyph erase];
+                }
+            }
+            // then clear up to cursor
+            columns = [term.terminalRows objectAtIndex:term.cursor.row];
+            for(int i = 0; i < term.cursor.column; i++) {
+                NoAALabel *glyph = [columns objectAtIndex:i];
+                [glyph erase];
+            }
+            break;
+        case 2: // clear entire screen
+            for(NSMutableArray *array in term.terminalRows) {
+                for(NoAALabel* glyph in array) {
+                    [glyph erase];
+                }
+            }
+            break;
+        default:
+            break;
+    }
+
+};
+
+- (void)processANSICommandSequence:(unsigned char *)sequence withLength:(int)len {
+    
+    NSString *commandIdentifier = [NSString string];
+    NSMutableArray *numericValues = [NSMutableArray array];
+    CommandState state = kCommandStart;
+    int numeric;
+    
+    while(len--) {
+        
+        unsigned char d = *sequence++;
+        switch(state) {
+            case kCommandStart:
+                if(d >= 060 && d <= 071) {
+                    // starting a numeric sequence
+                    state = kCommandNumeric;
+                    numeric = d - 060;
+                } else {
+                    // process command 
+                    commandIdentifier = [commandIdentifier stringByAppendingFormat:@"%c", d];
+                }
+                break;
+            case kCommandNumeric:
+                if(d >= 060 && d <= 071) {
+                    // continuing a numeric sequence
+                    numeric *= 10;
+                    numeric += d - 060;
+                } else if (d == ';') {
+                    // a compound argument command. Add the numeric received so far to an array of
+                    // values and clear the value for a possible next value
+                    [numericValues addObject:[NSNumber numberWithInt:numeric]];
+                    numeric = 0;
+                    
+                } else {
+                    if(numeric > 0) {
+                        [numericValues addObject:[NSNumber numberWithInt:numeric]];
+                    }
+                    commandIdentifier = [commandIdentifier stringByAppendingFormat:@"%c", d];
+                    state = kCommandStart;
+                }
+                break;
+        }
+    }
+    
+    // leaving this loop implies that a command has ended. Are there any commands that remain ambiguous?
+    CommandSequenceHandler handler = [commandSequenceHandlerDictionary objectForKey:commandIdentifier];
+    if(handler != nil) {
+        // need to pass the values accompanying this command and the terminal to operate on
+        handler(numericValues, self);
+    } else {
+        NSLog(@"Unhandled ANSICommand: %@", commandIdentifier);
+        if([numericValues count] > 0)
+            NSLog(@"%@", numericValues);
+    }
+}
+
+- (void)processDECCommandSequence:(unsigned char *)sequence withLength:(int)len {
+    NSString *commandDebugString = [NSString string];
+    
+    while(len--) {
+        commandDebugString = [commandDebugString stringByAppendingFormat:@"%c", *sequence++];
+    }
+    NSLog(@"DECCommand: %@", commandDebugString);
+}
+
 - (void)processCommandSequence:(NSData *)command {
     
     unsigned char * c = (unsigned char *)[command bytes];
     int len = [command length];
     
-    NSString *commandDebugString = [NSString string];
-
-    while(len--) {
-        unsigned char d = *c++;
-        if(d == 033)
-            commandDebugString = [commandDebugString stringByAppendingFormat:@"ESC "];
-        else
-            commandDebugString = [commandDebugString stringByAppendingFormat:@"%c", d];
-    }    
-    NSLog(@"command: %@", commandDebugString);
+    if(*c++ != 033) {
+        NSLog(@"command must start with ESC");
+        return;
+    }
+    len--;
     
-    
+    if(*c == '[') {
+        // eat the '['
+        [self processANSICommandSequence:++c withLength:--len];
+    } else {
+        [self processDECCommandSequence:c withLength:len];
+    }
 }
 
 - (void)processDataChunk {
@@ -272,6 +454,12 @@ typedef enum _TelnetDataState {
     self = [super initWithFrame:frame];
     if (self) {
 
+        commandSequenceHandlerDictionary = [NSDictionary dictionaryWithObjectsAndKeys:
+                                            cursorMoveDown, @"B",
+                                            doClearLine, @"J",
+                                            setTextAttributes, @"m",
+                                            setWindow, @"r",
+                                            nil];
         terminalRows = [NSMutableArray array];
         NSMutableArray *terminalRow;
         CGFloat xPos;
@@ -287,12 +475,13 @@ typedef enum _TelnetDataState {
                 
                 xPos = (CGFloat)(j * kGlyphWidth);
                 
-                UILabel *glyph = [[NoAALabel alloc] initWithFrame:CGRectMake(xPos, yPos, kGlyphWidth, kGlyphHeight)];
+                NoAALabel *glyph = [[NoAALabel alloc] initWithFrame:CGRectMake(xPos, yPos, kGlyphWidth, kGlyphHeight)];
                 glyph.font = [UIFont fontWithName:@"Courier New" size:kGlyphFontSize];
                 glyph.textColor = [UIColor whiteColor];
                 glyph.backgroundColor = [UIColor blackColor];
                 glyph.text = nil;
-
+                glyph.row = i;
+                glyph.column = j;
                 [terminalRow addObject:glyph];
                 [self addSubview:glyph];
             }

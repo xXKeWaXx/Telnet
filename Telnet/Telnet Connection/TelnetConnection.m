@@ -37,10 +37,6 @@
     
     for(NSDictionary *optionsDictionary in optionsArray) {
 
-        NSLog(@"%@", [optionsDictionary description]);
-
-        NSLog(@"%@", optionsDictionary);
-        
         handlerClass = NSClassFromString([optionsDictionary objectForKey:kTelnetOptionClassname]);
         TelnetOptionHandler *optionHandler = [[handlerClass alloc] init];
         optionHandler.acceptsOption = [[optionsDictionary objectForKey:kTelnetOptionSupported] boolValue];

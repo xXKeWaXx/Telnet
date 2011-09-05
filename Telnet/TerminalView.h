@@ -9,6 +9,8 @@
 #import <UIKit/UIKit.h>
 #import "TelnetConnection.h"
 
+@class NoAALabel;
+
 #define kTerminalRows (24)
 #define kTerminalColumns (80)
 
@@ -21,7 +23,19 @@
 #define kNVTSpecialCharCR   (13)
 
 // VT100 text attributes
- 
+
+typedef enum _TextAttributes {
+    
+    kTextAtributeClear = 0,
+    kTextAttributeBright = 1,
+    kTextAttributeDim = 2,
+    kTextAttributeUnderscore = 4,
+    kTextAttributeBlink = 5,
+    kTextAttributeReverse = 7,
+    kTextAttributeHidden = 8    
+    
+} TextAttributes;
+
 // 0	Reset all attributes
 // 1	Bright
 // 2	Dim
@@ -52,10 +66,23 @@
  
 @interface TerminalView : UIView <TerminalConnectionDisplayDelegate> {
     
+    NSDictionary *commandSequenceHandlerDictionary;
+    
+    // DEC window gives start and end row, e.g. ESC[1;24r = rows 1 to 24 are the current window.
+    int windowBegins;
+    int windowEnds;
+    
     int cursorRow;
     int cursorColumn;
 
-    UILabel *cursor;
+    BOOL textIsBright;
+    BOOL textIsDim;
+    BOOL textIsUnderscore;
+    BOOL textIsBlink;
+    BOOL textIsReverse;
+    BOOL textIsHidden;
+
+    NoAALabel *cursor;
     
     NSMutableArray *terminalRows;
     
@@ -66,5 +93,17 @@
     NSMutableData *dataForDisplay;
     
 }
+
+@property BOOL textIsBright;
+@property BOOL textIsDim;
+@property BOOL textIsUnderscore;
+@property BOOL textIsBlink;
+@property BOOL textIsReverse;
+@property BOOL textIsHidden;
+
+@property int windowBegins;
+@property int windowEnds;
+@property (nonatomic, retain) NoAALabel *cursor;
+@property (nonatomic, retain) NSMutableArray *terminalRows;
 
 @end

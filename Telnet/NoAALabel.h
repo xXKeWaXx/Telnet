@@ -33,7 +33,13 @@ typedef enum _color {
 
     GlyphColor color;
     GlyphIntensity intensity;
+    int row;
+    int column;
     
 }
 
+@property int row;
+@property int column;
+
+- (void)erase;
 @end

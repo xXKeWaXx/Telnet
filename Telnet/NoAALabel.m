@@ -10,6 +10,14 @@
 
 @implementation NoAALabel
 
+@synthesize row;
+@synthesize column;
+
+// set glyph to the current erase state, with no text set
+- (void)erase {
+    self.text = nil;
+}
+
 - (void)drawRect:(CGRect)rect {
     
     // turn off antialiasing for nice sharp terminal glyphs
