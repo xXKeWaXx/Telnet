@@ -72,9 +72,6 @@ typedef enum _TextAttributes {
     int windowBegins;
     int windowEnds;
     
-    int cursorRow;
-    int cursorColumn;
-
     BOOL textIsBright;
     BOOL textIsDim;
     BOOL textIsUnderscore;
