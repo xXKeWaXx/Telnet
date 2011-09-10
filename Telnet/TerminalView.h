@@ -8,6 +8,7 @@
 
 #import <UIKit/UIKit.h>
 #import "TelnetConnection.h"
+#import "TerminalIdentity.h"
 
 @class NoAALabel;
 
@@ -18,53 +19,9 @@
 #define kGlyphWidth (9.f)
 #define kGlyphHeight (18.f)
 
-#define kNVTSpecialCharNUL  (0)
-#define kNVTSpecialCharLF   (10)
-#define kNVTSpecialCharCR   (13)
-
 // VT100 text attributes
 
-typedef enum _TextAttributes {
-    
-    kTextAtributeClear = 0,
-    kTextAttributeBright = 1,
-    kTextAttributeDim = 2,
-    kTextAttributeUnderscore = 4,
-    kTextAttributeBlink = 5,
-    kTextAttributeReverse = 7,
-    kTextAttributeHidden = 8    
-    
-} TextAttributes;
-
-// 0	Reset all attributes
-// 1	Bright
-// 2	Dim
-// 4	Underscore	
-// 5	Blink
-// 7	Reverse
-// 8	Hidden
-
-// Foreground Colours
-// 30	Black
-// 31	Red
-// 32	Green
-// 33	Yellow
-// 34	Blue
-// 35	Magenta
-// 36	Cyan
-// 37	White
-
-// Background Colours
-// 40	Black
-// 41	Red
-// 42	Green
-// 43	Yellow
-// 44	Blue
-// 45	Magenta
-// 46	Cyan
-// 47	White
- 
-@interface TerminalView : UIView <TerminalConnectionDisplayDelegate> {
+@interface TerminalView : UIView <TerminalDisplayDelegate> {
     
     NSDictionary *commandSequenceHandlerDictionary;
     
@@ -79,6 +36,12 @@ typedef enum _TextAttributes {
     BOOL textIsReverse;
     BOOL textIsHidden;
 
+    UIColor *foregroundColor;
+    UIColor *backgroundColor;
+
+    int terminalRow;
+    int terminalColumn;
+    
     NoAALabel *cursor;
     
     NSMutableArray *terminalRows;
@@ -86,8 +49,6 @@ typedef enum _TextAttributes {
     // blink and underscore are done by manipulating the view not the font
     NSMutableArray *underlinedGlyphs;
     NSMutableArray *blinkingGlyphs;
-    
-    NSMutableData *dataForDisplay;
     
 }
 

@@ -10,7 +10,7 @@
 
 @implementation TelnetConnection
 
-@synthesize displayDelegate = _displayDelegate;
+@synthesize identityDelegate = _identityDelegate;
 
 - (id)init {
     
@@ -52,7 +52,7 @@
     [socket connectToHost:hostName onPort:port error:&error];
 
     NSData *display = [NSData dataWithBytes:kTelnetMsgConnecting length:strlen(kTelnetMsgConnecting)];
-    [_displayDelegate displayData:display];
+    [_identityDelegate displayData:display];
 }
 
 #define SEND_BUFSIZE (600)
@@ -407,7 +407,7 @@
         }
     }
     
-    [(NSObject *)_displayDelegate performSelectorOnMainThread:@selector(displayData:) withObject:dataForDisplay waitUntilDone:NO];
+    [(NSObject *)_identityDelegate performSelectorOnMainThread:@selector(displayData:) withObject:dataForDisplay waitUntilDone:NO];
     
     dataForDisplay = nil;
 

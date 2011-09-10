@@ -9,6 +9,7 @@
 #import "ViewController.h"
 #import "TelnetConnection.h"
 #import "TerminalView.h"
+#import "TerminalIdentity.h"
 
 @implementation ViewController
 
@@ -35,8 +36,10 @@
 - (void)viewDidLoad
 {
     [super viewDidLoad];
-	// Do any additional setup after loading the view, typically from a nib.
+
     
+    // terminal view is the class that displays terminal interaction.
+    // It implements TerminalDisplayDelegate
     TerminalView *terminalView = [[TerminalView alloc] initWithFrame:CGRectMake(0.f, 0.f, 0.f, 0.f)];
     [self.view addSubview:terminalView];
     CGFloat termWidth = terminalView.frame.size.width;
@@ -51,17 +54,22 @@
     [self.view addSubview:inputTextView];
     [inputTextView becomeFirstResponder];
     
+    // terminal identity is the terminal's personality, defining it as VT220, xTerm etc.
+    identity = [[TerminalIdentity alloc] init];
+    identity.displayDelegate = terminalView;
+    
+    // connection object manages the actual connection through GCDAsyncSocket
     connection = [[TelnetConnection alloc] init];
+    connection.identityDelegate = identity;
+    
     [connection setOptions:nil];
 
-    connection.displayDelegate = terminalView;
-//    [connection open:@"mud.genesismud.org" port:3011];
+//[connection open:@"mud.genesismud.org" port:3011];
     [connection open:@"nethack.alt.org" port:23];
 //    [connection open:@"batmud.bat.org" port:23];
     [connection read];
     [connection read];
     [connection read];
-
 }
 
 - (void)viewDidUnload

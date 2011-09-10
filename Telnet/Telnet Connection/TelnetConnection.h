@@ -13,7 +13,7 @@
 #import "TelnetOptionHandler.h"
 #import "TelnetConstants.h"
 
-@protocol TerminalConnectionDisplayDelegate
+@protocol TerminalIdentityDelegate
 - (void)displayData:(NSData *)data;
 @end
 
@@ -22,7 +22,7 @@
 
 @interface TelnetConnection : NSObject <GCDAsyncSocketDelegate> {
 
-    id<TerminalConnectionDisplayDelegate> __weak _displayDelegate;
+    id<TerminalIdentityDelegate> __weak _identityDelegate; // the interpreter module, i.e. VT220
     NSMutableDictionary *optionHandlers;
     GCDAsyncSocket *socket;
     long readSequence;
@@ -41,6 +41,6 @@
 - (void)read;
 - (void)setOptions:(NSString *)jsonOptions;
 
-@property id<TerminalConnectionDisplayDelegate> __weak displayDelegate;
+@property id<TerminalIdentityDelegate> __weak identityDelegate;
 
 @end

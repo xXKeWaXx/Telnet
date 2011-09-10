@@ -7,13 +7,16 @@
 //
 
 #import <UIKit/UIKit.h>
+#import "TerminalIdentity.h"
 
 @class TelnetConnection;
+@class TerminalIdentity;
 
 @interface ViewController : UIViewController <UITextViewDelegate> {
     
     UITextView *inputTextView;
     TelnetConnection *connection;
+    TerminalIdentity *identity;
 }
 
 @end
