@@ -279,16 +279,20 @@ static inline int colIndex(int colNumber) { return colNumber - 1; }
     }
 }
 
-// clear above cursor
+// clear beginning of screen to cursor
 - (void)clearCursorAbove {
 
     for(int i = 1; i < terminalRow; i++) {
         [self clearRow:i];
     }
+    
+    [self clearCursorLeft];
 }
 
-// clear below cursor
+// clear from cursor to end of screen
 - (void)clearCursorBelow {
+
+    [self clearCursorRight];
 
     for(int i = terminalRow + 1; i <= kTerminalRows; i++) {
         [self clearRow:i];

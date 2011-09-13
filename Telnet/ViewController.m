@@ -63,13 +63,20 @@
     connection.identityDelegate = identity;
     
     [connection setOptions:nil];
+    
+        // enable telnet
+        // sudo sh-3.2# launchctl
+        // launchd% load -F /System/Library/LaunchDaemons/telnet.plist
 
+    [connection open:@"127.0.0.1" port:23];
+
+//    [connection open:@"nethack.kraln.com" port:23];
 //[connection open:@"mud.genesismud.org" port:3011];
-    [connection open:@"nethack.alt.org" port:23];
-//    [connection open:@"batmud.bat.org" port:23];
+//    [connection open:@"nethack.alt.org" port:23];
+//    [connection open:@"sporkhack.com" port:23];
     [connection read];
-    [connection read];
-    [connection read];
+//    [connection read];
+//    [connection read];
 }
 
 - (void)viewDidUnload

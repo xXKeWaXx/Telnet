@@ -42,7 +42,7 @@
     
     do{
         if([numericValues count] == 0) {
-            commandValue = 1;
+            commandValue = 0;
         } else {
             commandValue = [[numericValues objectAtIndex:0] intValue];
         }
@@ -93,38 +93,17 @@
             handled = YES;
         } else if([commandIdentifier isEqualToString:@"H"]) {
             int row, col;
-            
-            if([numericValues count] == 0) {
-                row = 1;
-                col = 1;
-            } else {
-                row = [[numericValues objectAtIndex:0] intValue];
-                col = [[numericValues objectAtIndex:1] intValue];
-            }
+            row = [[numericValues objectAtIndex:0] intValue];
+            col = [[numericValues objectAtIndex:1] intValue];
             [_displayDelegate cursorSetRow:row column:col];
             [numericValues removeAllObjects];
             handled = YES;
-        } else if([commandIdentifier isEqualToString:@"J"]) {
-            switch(commandValue) {
-                case 0:
-                    [_displayDelegate clearCursorAbove];
-                    break;
-                case 1:
-                    [_displayDelegate clearCursorBelow];
-                    break;
-                default:
-                    [_displayDelegate clearAll];
-                    break;
-            }
-            if([numericValues count] > 0)
-                [numericValues removeObjectAtIndex:0];
-            handled = YES;
         } else if([commandIdentifier isEqualToString:@"K"]) {
             switch(commandValue) {
-                case 0:
+                case 0: // clear from cursor to end of line
                     [_displayDelegate clearCursorRight];
                     break;
-                case 1:
+                case 1: // clear from beginning of line to cursor
                     [_displayDelegate clearCursorLeft];
                     break;
                 default:
@@ -141,55 +120,183 @@
     return handled;
 }
 
-- (void)processANSICommandSequence:(unsigned char *)sequence withLength:(int)len {
+// ANSI command 'J'
+- (void)commandEraseScreen:(unsigned char)argument {
+    switch(argument) {
+        case 0: // clear from cursor to end of screen
+            [_displayDelegate clearCursorBelow];
+            break;
+        case 1: // clear from beginning of screen to cursor
+            [_displayDelegate clearCursorAbove];
+            break;
+        default: // clear all
+            [_displayDelegate clearAll];
+    }
+}
+
+// ANSI command 'K'
+- (void)commandEraseLine:(unsigned char)argument {
+    switch(argument) {
+        case 0: // clear from cursor to end of line
+            [_displayDelegate clearCursorRight];
+            break;
+        case 1: // clear from beginning of line to cursor
+            [_displayDelegate clearCursorLeft];
+            break;
+        default:
+            [_displayDelegate clearRow];
+            break;
+    }
+}
+
+#define COMMAND_DEFAULT_VALUE (255)
+
+// for extracting single, simple values
+- (int)parseSimpleNumeric:(unsigned char *)sequence length:(int)len {
+
+    unsigned char thisChar;
+    int numeric = 0;
     
-    NSString *commandIdentifier = [NSString string];
-    NSMutableArray *numericValues = [NSMutableArray array];
-    CommandState state = kCommandStart;
-    int numeric;
-    
-    while(len--) {
-        
-        unsigned char d = *sequence++;
-        switch(state) {
-            case kCommandStart:
-                if(d >= 060 && d <= 071) {
-                    // starting a numeric sequence
-                    state = kCommandNumeric;
-                    numeric = d - 060;
-                } else {
-                    // process command 
-                    commandIdentifier = [commandIdentifier stringByAppendingFormat:@"%c", d];
-                }
-                break;
-            case kCommandNumeric:
-                if(d >= 060 && d <= 071) {
-                    // continuing a numeric sequence
-                    numeric *= 10;
-                    numeric += d - 060;
-                } else if (d == ';') {
-                    // a compound argument command. Add the numeric received so far to an array of
-                    // values and clear the value for a possible next value
-                    [numericValues addObject:[NSNumber numberWithInt:numeric]];
-                    numeric = 0;
-                    
-                } else {
-                    if(numeric > 0) {
-                        [numericValues addObject:[NSNumber numberWithInt:numeric]];
-                    }
-                    commandIdentifier = [commandIdentifier stringByAppendingFormat:@"%c", d];
-                    state = kCommandStart;
-                }
-                break;
+    if(len == 0) {
+        numeric = COMMAND_DEFAULT_VALUE;
+    } else {
+        while(len--) {
+            thisChar = *(sequence + len);
+            numeric *= 10;
+            numeric += thisChar - '0';
         }
     }
-    
-    
-    if([self recognisedCommand:commandIdentifier withNumerics:numericValues] == NO) {
-        NSLog(@"Unhandled ANSICommand: %@", commandIdentifier);
-        if([numericValues count] > 0)
-            NSLog(@"%@", numericValues);
+    return numeric;
+}
+
+// iterate over the values represented by the chars in sequence, extracting numeric values
+- (NSMutableData *)parseNumerics:(unsigned char *)sequence length:(int)len {
+
+    NSMutableData *numericSequence = [NSMutableData data];
+    unsigned char thisChar;
+    unsigned char numeric = 0;
+    BOOL isFirstChar = YES;
+    BOOL inNumericSequence = NO;
+    static const unsigned char defaultValue = COMMAND_DEFAULT_VALUE;
+        
+    while(len--) {
+        thisChar = *(sequence + len);
+        
+        if(isFirstChar == YES) {
+            if(thisChar == ';') {
+                // a ';' first up indicates a default value
+                [numericSequence appendBytes:&defaultValue length:1];
+            } else {
+                numeric = thisChar - '0';
+                inNumericSequence = YES;
+            }
+            isFirstChar = NO;
+        } else {
+            if(thisChar == ';') {
+                [numericSequence appendBytes:&numeric length:1];
+                numeric = 0;
+                inNumericSequence = NO;
+            } else {
+                numeric *= 10;
+                numeric += thisChar - '0';
+                inNumericSequence = YES;
+            }
+        }
     }
+    if(inNumericSequence == YES)
+        // final value must be added
+        [numericSequence appendBytes:&numeric length:1];
+    else 
+        // a trailing ; also indicates a default value
+        [numericSequence appendBytes:&defaultValue length:1];
+    
+    return numericSequence;
+}
+
+// command sequence comes in reverse to make processing easier
+- (void)processANSICommandSequence:(unsigned char *)sequence withLength:(int)len {
+    
+    unsigned char finalChar = *sequence;
+    // finalChar is the first char, advance
+    len--; 
+    sequence++;
+    int count; 
+    
+    switch(finalChar) {
+        case 'A': // cursor up
+        {
+            count = [self parseSimpleNumeric:sequence length:len];
+            if(count == COMMAND_DEFAULT_VALUE)
+                count = 1;
+            while(count--)
+                [_displayDelegate cursorUp];
+        }
+            break;
+        case 'B': // cursor down
+        {
+            count = [self parseSimpleNumeric:sequence length:len];
+            if(count == COMMAND_DEFAULT_VALUE)
+                count = 1;
+            while(count--)
+                [_displayDelegate cursorDown];
+        }
+            break;
+        case 'C': // cursor forward (right)
+        {
+            count = [self parseSimpleNumeric:sequence length:len];
+            if(count == COMMAND_DEFAULT_VALUE)
+                count = 1;
+            while(count--)
+                [_displayDelegate cursorRight];
+        }
+            break;
+        case 'D': // cursor backward (left)
+        {
+            count = [self parseSimpleNumeric:sequence length:len];
+            if(count == COMMAND_DEFAULT_VALUE)
+                count = 1;
+            while(count--)
+                [_displayDelegate cursorLeft];
+        }
+            break;
+        case 'J':
+        {
+            switch(len) {
+                case 0: // default erase to end of screen
+                    [self commandEraseScreen:'0'];
+                    break;
+                case 1: 
+                    [self commandEraseScreen:*sequence];
+                    break;
+            }
+        }
+            break;
+        case 'K':
+            switch(len) {
+                case 0: // default erase to end of screen
+                    [self commandEraseLine:'0'];
+                    break;
+                case 1: 
+                    [self commandEraseLine:*sequence];
+                    break;
+            }
+            break;
+        case 'H':
+        case 'f':
+        {
+            NSMutableData *orderedNumerics = [self parseNumerics:sequence length:len];
+            unsigned char *bytes = [orderedNumerics mutableBytes];
+            if(*bytes > 24 || *(bytes + 1) > 80)
+                NSLog(@"Dodgy cursor position!");
+            else
+                [_displayDelegate cursorSetRow:*bytes column:*(bytes + 1)];
+            
+        }
+            break;
+        default:
+            NSLog(@"Unhandled command sequence finalChar %c", finalChar);
+    }
+    
 }
 
 - (void)processDECCommandSequence:(unsigned char *)sequence withLength:(int)len {
@@ -198,123 +305,306 @@
     while(len--) {
         commandDebugString = [commandDebugString stringByAppendingFormat:@"%c", *sequence++];
     }
-    NSLog(@"DECCommand: %@", commandDebugString);
 }
 
+- (void)processCommandSequence:(NSData *)sequence {
 
-- (void)processCommandSequence:(NSData *)command {
+    unsigned char * c = (unsigned char *)[sequence bytes];
+    int len = [sequence length];
+    NSMutableData *reversedCommand = [NSMutableData data];
+    BOOL isANSI = NO;
     
-    unsigned char * c = (unsigned char *)[command bytes];
-    int len = [command length];
+    int reverseLen = len;
     
-    if(*c++ != 033) {
-        NSLog(@"command must start with ESC");
-        return;
+    while(reverseLen) {
+    
+        unsigned char thisChar = *(c + --reverseLen);
+        
+        if(thisChar != 033) {
+            if(thisChar == '[') {
+                isANSI = YES;
+            } else {
+                [reversedCommand appendBytes:&thisChar length:1];
+            }
+        }
     }
-    len--;
-    
-    if(*c == '[') {
-        // eat the '['
-        [self processANSICommandSequence:++c withLength:--len];
+
+    if(isANSI == YES) {
+        [self processANSICommandSequence:[reversedCommand mutableBytes] withLength:[reversedCommand length]];
     } else {
-        [self processDECCommandSequence:c withLength:len];
+        [self processDECCommandSequence:[reversedCommand mutableBytes] withLength:[reversedCommand length]];
     }
+}
+
+typedef enum _TerminalDataState {
+    kStateGround,
+    kStateEsc,
+    kStateEscIntermediate,
+    kStateCSIEntry,
+    kStateCSIParam,
+    kStateCSIIntermediate,
+    kStateCSIIgnore,
+    kStateDCSEntry,
+    kStateDCSParam,
+    kStateDCSIntermediate,
+    kStateDCSPassthrough,
+    kStateDCSIgnore,
+    kStateOSCString,
+    kStateSOSPMAPCString
+    
+} TerminalDataState;
+
+BOOL isControlChar(uint8_t character);
+TerminalDataState transitionFromAnywhere(uint8_t character, int stateNow);
+
+BOOL isControlChar(uint8_t character) {
+    if ((character > 0x00 && character < 0x17) ||
+        (character == 0x19) ||
+        (character >= 0x1c && character <= 0x1f))
+        return YES;
+    return NO;
+}
+
+TerminalDataState transitionFromAnywhere(uint8_t character, int stateNow) {
+
+    TerminalDataState takeState;
+    
+    if(character == 0x1b) {
+        takeState = kStateEsc;
+    } else if ((character == 0x18 || character == 0x1A) ||
+               (character >= 0x80 && character <= 0x8f) ||
+               (character >= 0x91 && character <= 0x97) ||
+               (character == 0x9a) ||
+               (character == 0x9c)) {
+        takeState = kStateGround;
+    } else if (character == 0x9b) {
+        takeState = kStateCSIEntry;
+    } else if (character == 0x98 ||
+               character == 0x9e ||
+               character == 0x9f) {
+        takeState = kStateSOSPMAPCString;
+    } else if(character == 0x9d) {
+        takeState = kStateOSCString;
+    } else if(character == 0x90) {
+        takeState = kStateDCSEntry;
+    } else {
+        takeState = stateNow;
+    }
+    return takeState;
 }
 
 - (void)processDataChunk {
     
     unsigned char *c = (unsigned char *)[dataForDisplay bytes];
     int len = [dataForDisplay length];
-    TelnetDataState dataState = kTelnetDataStateRest;
+    TerminalDataState state;
+    TerminalDataState transitionState;
+//    privateFlag;
+//    intermediateCharacters;
+//    finalCharacter;
+//    parameters;
     
-    NSMutableData *command = [NSMutableData data];
-    BOOL continuing = YES;
-    
-    while(len-- && continuing) {
+    while(len--) {
+        uint8_t d = *c++;
+        // some transitions can happen from "anywhere"
+        if((transitionState = transitionFromAnywhere(d, state)) != state) {
+            if(transitionState == kStateEsc ||
+               transitionState == kStateDCSEntry ||
+               transitionState == kStateCSIEntry) {
+                // on entry, clear 
+                //    privateFlag;
+                //    intermediateCharacters;
+                //    finalCharacter;
+                //    parameters;
+            }
+            state = transitionState;
+            continue;
+        }
         
-        unsigned char d = *c++;
-        
-        switch(dataState) {
-                
-            case kTelnetDataStateRest: {
-                
-                // simplest case - not part of a command sequence, output a glyph
-                if([self isTelnetPrintable:d]) {
-                    
+        switch(state) {
+            case kStateGround:
+                if(d > 0x20 && d < 0x7f) { 
+                    // display printable chars
                     [_displayDelegate characterDisplay:d];
-                    break;
-                    
-                    // individual special characters
-                } else if ([self isTelnetControl:d]) {
-                    
+                } else if(isControlChar(d) == YES) { 
                     [_displayDelegate characterNonDisplay:d];
-                    break;
-                    
-                } else if (d == 016) { // SQ invoke G1 character set
-                } else if (d == 017) { // SI invoke G0 character set
-                } else if (d == 021) { // XON resume transmission
-                } else if (d == 023) { // XOFF pause transmission                    
-                } else if (d == 033) { // ESC initiate control sequence
-                    [command appendBytes:&d length:1];
-                    dataState = kTelnetDataStateESC;
-                } else if (d == 0177) { // ignored
                 }
-            }
                 break;
-                
-            case kTelnetDataStateESC: {
-                
-                if (d == 0133) { // [ - enter CSI state
-                    [command appendBytes:&d length:1];
-                    dataState = kTelnetDataStateCSI;
-                } else if (d == 033) { // ESC - discard all preceding control sequence construction, begin again
-                    command = [NSMutableData dataWithBytes:&d length:1];
-                } else if (d == 0104 || d == 0105 || d == 0115) { // D index, E newline, M reverse index
-                    [command appendBytes:&d length:1];
-                    [self processCommandSequence:command];
-                    continuing = NO;
-                } else if (d == 0101 || d == 0102 || d == 060 || d == 061 || d == 062) { // A UK, B USASCII, 0 Special graphics, 1 alt ROM, 2 alt ROM special graphics
-                    [command appendBytes:&d length:1];
-                    [self processCommandSequence:command];
-                    continuing = NO;
-                    
-                } else if (d == 067 || d == 070) { // 7 save cursor, 8 restore cursor
-                    [command appendBytes:&d length:1];
-                    [self processCommandSequence:command];
-                    continuing = NO;
-                } else if (d == 030 || d == 032) { // CAN, SUB cancel current control sequence
-                    command = nil;
-                    continuing = NO;
-                } else if (d == 050 || d == 051) { // ( G0 designator, ) G1 designator
-                    [command appendBytes:&d length:1];
-                } else {
-                    [command appendBytes:&d length:1];
-                    [self processCommandSequence:command];
-                    continuing = NO;
-                }
-            }
+            case kStateEsc:
+                if(isControlChar(d) == YES) {
+                    [_displayDelegate characterNonDisplay:d];
+                } else if(d == 0x50) {
+                    // on entry, clear 
+                    //    privateFlag;
+                    //    intermediateCharacters;
+                    //    finalCharacter;
+                    //    parameters;
+                    state = kStateDCSEntry;
+                } else if(d == 0x58 ||
+                          d == 0x5e ||
+                          d == 0x5f) {
+                    state = kStateSOSPMAPCString;
+                } else if(d == 0x5b) {
+                    // on entry, clear 
+                    //    privateFlag;
+                    //    intermediateCharacters;
+                    //    finalCharacter;
+                    //    parameters;
+                    state = kStateCSIEntry;
+                } else if(d == 0x5d) {
+                    // sction osc_start TODO
+                    state = kStateOSCString;
+                } else if((d >= 0x30 && d <= 0x4f) ||
+                          (d >= 0x51 && d <= 0x57) ||
+                          d == 0x59 ||
+                          d == 0x5a ||
+                          d == 0x5c ||
+                          (d >= 0x60 && d < 0x7e)) {
+                    // action esc_dispatch TODO
+                    state = kStateGround;
+                } else if(d >= 0x20 && d <= 0x2f) {
+                    // action collect TODO
+                    state = kStateEscIntermediate;
+                } // ignore 0x7f
                 break;
-                
-            case kTelnetDataStateCSI: {
-                
-                if(d == 033) { // ESC - discard all preceding control sequence construction, begin again
-                    command = [NSMutableData dataWithBytes:&d length:1];
-                } else if ((d >= 060 && d <= 071) || (d == 073)) { // Numeric or the ';' char
-                    [command appendBytes:&d length:1];
-                } else {
-                    [command appendBytes:&d length:1];
-                    [self processCommandSequence:command];
-                    continuing = NO;
+            case kStateEscIntermediate:
+                if(isControlChar(d) == YES) {
+                    [_displayDelegate characterNonDisplay:d];
+                } else if(d >= 0x20 && d <= 0x2f) {
+                    // action collect TODO
+                } else if(d >= 0x30 && d <= 0x7e) {
+                    // action esc_dispatch TODO
+                    state = kStateGround;
+                } // ignore 0x7f
+                break;
+            case kStateCSIEntry:
+                if(isControlChar(d) == YES) {
+                    [_displayDelegate characterNonDisplay:d];
+                } else if(d >= 0x40 || d <= 0x7e) {
+                    // action csi_dispatch TODO
+                    state = kStateGround;
+                } else if((d >= 0x30 || d <= 0x39) ||
+                          d == 0x3b) {
+                    // action param TODO
+                    state = kStateCSIParam;
+                } else if(d >= 0x3c || d <= 0x3f) {
+                    // action collect TODO
+                    state = kStateCSIParam;
+                } else if(d >= 0x20 || d <= 0x2f) {
+                    // action collect TODO
+                    state = kStateCSIIntermediate;
+                } else if(d >= 0x3a) {
+                    state = kStateCSIIgnore;
+                } // ignore 0x7f
+                break;
+            case kStateCSIParam:
+                if(isControlChar(d) == YES) {
+                    [_displayDelegate characterNonDisplay:d];
+                } else if(d >= 0x40 || d <= 0x7e) {
+                    // action csi_dispatch TODO
+                    state = kStateGround;
+                } else if((d >= 0x3c && d <= 0x3f) ||
+                          d == 0x3a) {
+                    state = kStateCSIIgnore;
                 }
-            }
+                break;
+            case kStateCSIIntermediate:
+                if(isControlChar(d) == YES) {
+                    [_displayDelegate characterNonDisplay:d];
+                } else if(d >= 0x20 && d <= 0x2f) {
+                    // action collect TODO
+                } else if(d >= 0x30 && d <= 0x3f) {
+                    state = kStateCSIIgnore;
+                } else if(d >= 0x40 && d <= 0x7e) {
+                    // action csi_dispatch TODO
+                    state = kStateGround;
+                } // ignore 0x7f
+                break;
+            case kStateCSIIgnore:
+                if(isControlChar(d) == YES) {
+                    [_displayDelegate characterNonDisplay:d];
+                } else if(d >= 0x40 && d <= 0x7e) {
+                    state = kStateGround;
+                } // ignore 0x20-0x3f and 0x7f
+                break;
+            case kStateDCSEntry:
+                // ignore control chars here
+                if(d >= 0x20 && d <= 0x2f) {
+                    // action collect TODO
+                    state = kStateDCSIntermediate;
+                } else if(d == 0x3a) {
+                    state = kStateDCSIgnore;
+                } else if((d >= 0x30 && d <= 0x39) ||
+                          d == 0x3b) {
+                    // action param TODO
+                    state = kStateDCSParam;
+                } else if(d >= 0x3c && d <= 0x3f) {
+                    // action collect TODO
+                    state = kStateDCSParam;
+                } else if(d >= 0x40 && d <= 0x7e) {
+                    // action hook TODO
+                    state = kStateDCSPassthrough;
+                } // ignore 0x7f
+                break;
+            case kStateDCSParam:
+                // ignore control chars here
+                if((d >= 0x30 && d < 0x39) || d == 0x3b) {
+                    // action param TODO
+                } else if((d >= 0x3c && d < 0x3f) || d == 0x3a) {
+                    // action param TODO
+                    state = kStateDCSIgnore;
+                } else if(d >= 0x40 && d <= 0x7e) {
+                    // action hook TODO
+                    state = kStateDCSPassthrough;
+                } else if(d >= 0x20 && d <= 0x2f) {
+                    // action collect TODO
+                    state = kStateDCSIntermediate;
+                } // ignore 0x7f
+                break;
+            case kStateDCSIntermediate:
+                // ignore control chars here
+                if(d >= 0x20 && d <= 0x2f) {
+                    // action collect TODO
+                } else if(d >= 0x30 && d <= 0x3f) {
+                    state = kStateDCSIgnore;
+                } else if(d >= 0x40 && d <= 0x7e) {
+                    // action hook TODO
+                    state = kStateDCSPassthrough;
+                } // ignore 0x7f
+                break;
+            case kStateDCSPassthrough:
+                if((d >= 0x00 && d <= 0x17) ||
+                   d == 0x19 ||
+                   (d >= 0x1c && d <= 0x1f) ||
+                   (d >= 0x20 && d <= 0x7e)) {
+                       // action put to hook TODO
+                } else if(d == 0x9c) {
+                    // action unhook TODO
+                    state = kStateGround;
+                }
+                break;
+            case kStateDCSIgnore:
+                if(d == 0x9c)
+                    state = kStateGround;
+                break;
+            case kStateOSCString:
+                if(d >= 0x20 && d <= 0x7f) {
+                    // action osc_put TODO
+                } else if(d == 0x9c) {
+                    // action osc_end TODO
+                    state = kStateGround;
+                }
+                break;
+            case kStateSOSPMAPCString:
+                if(d == 0x9c) {
+                    state = kStateGround;
+                }
                 break;
         }
     }
-    
+        
     if(len > 0) {
-        
         dataForDisplay = [NSMutableData dataWithBytes:c length:len];
-        
         // more data to display, allow run loop to continue and return here
         [self performSelector:@selector(processDataChunk) withObject:nil afterDelay:0.0f];
     } else {
