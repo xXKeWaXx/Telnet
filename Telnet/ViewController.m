@@ -19,6 +19,41 @@
     // Release any cached data, images, etc that aren't in use.
 }
 
+#pragma - mark TerminalResponderDelegate
+
+- (void)sendResponse:(TerminalResponseType)response {
+    
+    uint8_t esc = 0x1b;
+    uint8_t csi = '[';
+    uint8_t question = '?';
+    uint8_t semi = ';';
+    uint8_t numeric;
+    
+    NSMutableData *responseData = [NSMutableData data];
+    [responseData appendBytes:&esc length:1];
+    
+    switch(response) {
+        case kResponseTerminalIdentity:
+            [responseData appendBytes:&csi length:1];
+            [responseData appendBytes:&question length:1];
+            numeric = '1';
+            [responseData appendBytes:&numeric length:1];
+            [responseData appendBytes:&semi length:1];
+            numeric = '0';
+            [responseData appendBytes:&numeric length:1];
+            numeric = 'c';
+            [responseData appendBytes:&numeric length:1];
+            
+            break;
+        default:
+            NSLog(@"TerminalIdentity requested strange response to host");
+            break;
+    }
+    
+    [connection sendData:responseData];
+}
+
+
 #pragma - mark UITextViewDelegate
 - (BOOL)textViewShouldEndEditing:(UITextView *)textView {
     return NO;
@@ -26,7 +61,7 @@
 
 - (void)textViewDidChange:(UITextView *)textView {
     
-    [connection send:textView.text];
+    [connection sendString:textView.text];
     textView.text = nil;
 }
 // UITextViewDelegate ends
@@ -57,18 +92,20 @@
     // terminal identity is the terminal's personality, defining it as VT220, xTerm etc.
     identity = [[TerminalIdentity alloc] init];
     identity.displayDelegate = terminalView;
+    identity.responderDelegate = self;
     
     // connection object manages the actual connection through GCDAsyncSocket
     connection = [[TelnetConnection alloc] init];
     connection.identityDelegate = identity;
-    
     [connection setOptions:nil];
     
         // enable telnet
         // sudo sh-3.2# launchctl
         // launchd% load -F /System/Library/LaunchDaemons/telnet.plist
 
-    [connection open:@"127.0.0.1" port:23];
+    [connection open:@"172.16.0.230" port:23];
+
+//    [connection open:@"127.0.0.1" port:23];
 
 //    [connection open:@"nethack.kraln.com" port:23];
 //[connection open:@"mud.genesismud.org" port:3011];

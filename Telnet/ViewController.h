@@ -12,7 +12,7 @@
 @class TelnetConnection;
 @class TerminalIdentity;
 
-@interface ViewController : UIViewController <UITextViewDelegate> {
+@interface ViewController : UIViewController <UITextViewDelegate, TerminalResponderDelegate> {
     
     UITextView *inputTextView;
     TelnetConnection *connection;

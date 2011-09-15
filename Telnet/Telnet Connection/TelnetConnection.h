@@ -37,7 +37,8 @@
 }
 
 - (void)open:(NSString *)hostName port:(unsigned long)port;
-- (void)send:(NSString *)sendData;
+- (void)sendData:(NSData *)sendData;
+- (void)sendString:(NSString *)sendString;
 - (void)read;
 - (void)setOptions:(NSString *)jsonOptions;
 

@@ -62,12 +62,17 @@
 
 }
 
-- (void)send:(NSString *)sendData {
+- (void)sendData:(NSData *)sendData {
 
-    const char *buf = [sendData cStringUsingEncoding:NSASCIIStringEncoding];
+    [socket writeData:sendData withTimeout:-1 tag:writeSequence++];
+}
 
-    NSData *data = [[NSData alloc] initWithBytes:buf length:[sendData length]];
-    [socket writeData:data withTimeout:-1 tag:writeSequence++];
+- (void)sendString:(NSString *)sendString {
+    
+    const char *buf = [sendString cStringUsingEncoding:NSASCIIStringEncoding];
+    NSData *data = [[NSData alloc] initWithBytes:buf length:[sendString length]];
+    
+    [self sendData:data];
 }
 
 - (void)sendOption:(unsigned char)option command:(unsigned char)cmd {

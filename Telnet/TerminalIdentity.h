@@ -11,6 +11,16 @@
 #import "TelnetConnection.h"
 #import "TerminalConstants.h"
 
+@protocol TerminalResponderDelegate <NSObject>
+
+typedef enum _TerminalResponseType {
+    kResponseTerminalIdentity = 0
+} TerminalResponseType;
+
+- (void)sendResponse:(TerminalResponseType)response;
+
+@end
+
 @protocol TerminalDisplayDelegate <NSObject>
 
 // display characters
@@ -66,10 +76,12 @@ typedef enum _TelnetDataState {
 @interface TerminalIdentity : NSObject <TerminalIdentityDelegate> {
     
     id<TerminalDisplayDelegate>  __weak _displayDelegate;
+    id<TerminalResponderDelegate> __weak _responderDelegate;
     
     NSMutableData *dataForDisplay;
 }
 
 @property id<TerminalDisplayDelegate>  __weak displayDelegate;
+@property id<TerminalResponderDelegate>  __weak responderDelegate;
 
 @end

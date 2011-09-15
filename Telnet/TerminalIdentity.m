@@ -13,6 +13,7 @@
 @implementation TerminalIdentity
 
 @synthesize displayDelegate = _displayDelegate;
+@synthesize responderDelegate = _responderDelegate;
 
 - (BOOL)isTelnetControl:(unsigned char)c {
 
@@ -33,91 +34,6 @@
     if(c >= 32 && c <= 126)
         return YES;
     return NO;
-}
-
-- (BOOL)recognisedCommand:(NSString *)commandIdentifier withNumerics:(NSMutableArray *)numericValues {
-    
-    BOOL handled = NO;
-    int commandValue;
-    
-    do{
-        if([numericValues count] == 0) {
-            commandValue = 0;
-        } else {
-            commandValue = [[numericValues objectAtIndex:0] intValue];
-        }
-        
-        if([commandIdentifier isEqualToString:@"l"]) {
-            if([numericValues count] > 0)
-                [numericValues removeObjectAtIndex:0];
-            handled = YES;
-        } else if([commandIdentifier isEqualToString:@"m"]) {
-            [_displayDelegate displayReset];
-            handled = YES;
-        } else if([commandIdentifier isEqualToString:@"r"]) {
-            int firstRow, lastRow;
-            
-            if([numericValues count] == 0) {
-                firstRow = 1;
-                lastRow = 24;
-            } else {
-                firstRow = [[numericValues objectAtIndex:0] intValue];
-                lastRow = [[numericValues objectAtIndex:1] intValue];
-            }
-            [_displayDelegate terminalWindowSetRowStart:firstRow rowEnd:lastRow];
-            [numericValues removeAllObjects];
-            handled = YES;
-        } else if([commandIdentifier isEqualToString:@"A"]) {
-            while(commandValue--)
-                [_displayDelegate cursorUp];
-            if([numericValues count] > 0)
-                [numericValues removeObjectAtIndex:0];
-            handled = YES;
-        } else if([commandIdentifier isEqualToString:@"B"]) {
-            while(commandValue--)
-                [_displayDelegate cursorDown];
-            if([numericValues count] > 0)
-                [numericValues removeObjectAtIndex:0];
-            handled = YES;
-        } else if([commandIdentifier isEqualToString:@"C"]) {
-            while(commandValue--)
-                [_displayDelegate cursorRight];
-            if([numericValues count] > 0)
-                [numericValues removeObjectAtIndex:0];
-            handled = YES;
-        } else if([commandIdentifier isEqualToString:@"D"]) {
-            while(commandValue--)
-                [_displayDelegate cursorLeft];
-            if([numericValues count] > 0)
-                [numericValues removeObjectAtIndex:0];
-            handled = YES;
-        } else if([commandIdentifier isEqualToString:@"H"]) {
-            int row, col;
-            row = [[numericValues objectAtIndex:0] intValue];
-            col = [[numericValues objectAtIndex:1] intValue];
-            [_displayDelegate cursorSetRow:row column:col];
-            [numericValues removeAllObjects];
-            handled = YES;
-        } else if([commandIdentifier isEqualToString:@"K"]) {
-            switch(commandValue) {
-                case 0: // clear from cursor to end of line
-                    [_displayDelegate clearCursorRight];
-                    break;
-                case 1: // clear from beginning of line to cursor
-                    [_displayDelegate clearCursorLeft];
-                    break;
-                default:
-                    [_displayDelegate clearRow];
-                    break;
-            }
-            if([numericValues count] > 0)
-                [numericValues removeObjectAtIndex:0];
-            handled = YES;
-
-        }
-    } while(0); //[numericValues count] != 0);
-
-    return handled;
 }
 
 // ANSI command 'J'
@@ -179,37 +95,41 @@
     BOOL inNumericSequence = NO;
     static const unsigned char defaultValue = COMMAND_DEFAULT_VALUE;
         
-    while(len--) {
-        thisChar = *(sequence + len);
-        
-        if(isFirstChar == YES) {
-            if(thisChar == ';') {
-                // a ';' first up indicates a default value
-                [numericSequence appendBytes:&defaultValue length:1];
+    if(len) {
+        while(len--) {
+            thisChar = *(sequence + len);
+            
+            if(isFirstChar == YES) {
+                if(thisChar == '?') {
+                    // a ? indicates a report
+                    [numericSequence appendBytes:&thisChar length:1];
+                } else if(thisChar == ';') {
+                    // a ';' first up indicates a default value
+                    [numericSequence appendBytes:&defaultValue length:1];
+                } else {
+                    numeric = thisChar - '0';
+                    inNumericSequence = YES;
+                }
+                isFirstChar = NO;
             } else {
-                numeric = thisChar - '0';
-                inNumericSequence = YES;
-            }
-            isFirstChar = NO;
-        } else {
-            if(thisChar == ';') {
-                [numericSequence appendBytes:&numeric length:1];
-                numeric = 0;
-                inNumericSequence = NO;
-            } else {
-                numeric *= 10;
-                numeric += thisChar - '0';
-                inNumericSequence = YES;
+                if(thisChar == ';') {
+                    [numericSequence appendBytes:&numeric length:1];
+                    numeric = 0;
+                    inNumericSequence = NO;
+                } else {
+                    numeric *= 10;
+                    numeric += thisChar - '0';
+                    inNumericSequence = YES;
+                }
             }
         }
-    }
-    if(inNumericSequence == YES)
-        // final value must be added
-        [numericSequence appendBytes:&numeric length:1];
-    else 
-        // a trailing ; also indicates a default value
-        [numericSequence appendBytes:&defaultValue length:1];
-    
+        if(inNumericSequence == YES)
+            // final value must be added
+            [numericSequence appendBytes:&numeric length:1];
+        else 
+            // a trailing ; also indicates a default value
+            [numericSequence appendBytes:&defaultValue length:1];
+    }    
     return numericSequence;
 }
 
@@ -217,12 +137,143 @@
 - (void)processANSICommandSequence:(unsigned char *)sequence withLength:(int)len {
     
     unsigned char finalChar = *sequence;
-    // finalChar is the first char, advance
-    len--; 
-    sequence++;
-    int count; 
+    // finalChar is the first char, advance unless it is also last
+    if(len > 0) {
+        len--; 
+        sequence++;
+    }
+    int count;
+    NSMutableData *arguments;
     
     switch(finalChar) {
+        case 'c': // interrogation VT220 p.46
+        {
+            count = [self parseSimpleNumeric:sequence length:len];
+            if(count == 0) {
+                // identified request to identify terminal type
+                [_responderDelegate sendResponse:kResponseTerminalIdentity];
+                
+            }
+        }
+            break;
+            
+        case 'h':
+        {
+            arguments = [self parseNumerics:sequence length:len];
+            unsigned char *bytes = [arguments mutableBytes];
+            
+            if(*bytes == '?') {
+                switch(*(bytes + 1)) {
+                        
+                    case 7:
+                        // Send: <27> [ ? 7 h Wraparound Mode (DECAWM). 
+                        NSLog(@"parsed c3 OK");
+                        break;
+                    case 40:
+                        // Send: <27> [ ? 40 h Allow 80 → 132 Mode. 
+                        NSLog(@"parsed c3 OK");
+                        break;
+                    default:
+                        NSLog(@"%@", [NSString stringWithFormat:@"Got a ESC [ ? %d h not handled.", *(bytes + 1)]);
+                        break;
+                        
+                }
+            }
+        }
+            break;
+
+        case 'l':
+        {
+            arguments = [self parseNumerics:sequence length:len];
+            unsigned char *bytes = [arguments mutableBytes];
+            
+            if(*bytes == '?') {
+                switch(*(bytes + 1)) {
+                        
+                    case 1:
+                        // Send: <27> [ ? 1 1 → Normal Cursor Keys (DECCKM). 
+                        NSLog(@"parsed c3 OK");
+                        break;
+                    case 3:
+                        // Send: <27> [ ? 3 l 80 Column Mode (DECCOLM). 
+                        NSLog(@"parsed c3 OK");
+                        break;
+                    case 4:
+                        // Send: <27> [ ? 4 l Jump (Fast) Scroll (DECSCLM).
+                        NSLog(@"parsed c4 OK");
+                        break;
+                    case 5:
+                        // Send: <27> [ ? 5 l Normal Video (DECSCNM).  
+                        NSLog(@"parsed c5 OK");
+                        break;
+                    case 6:
+                        // Send: <27> [ ? 6 l Normal Cursor Mode (DECOM). 
+                        NSLog(@"parsed c6 OK");
+                        break;
+                    case 7:
+                        // Send: <27> [ ? 7 h No Wraparound Mode (DECAWM). 
+                        NSLog(@"parsed c7 OK");
+                        break;
+                    case 8:
+                        // Send: <27> [ ? 8 l No Auto-repeat Keys (DECARM). 
+                        NSLog(@"parsed c8 OK");
+                        break;
+                    case 40:
+                        // Send: <27> [ ? 4 0 h Disallow 80 → 132 Mode. 
+                        NSLog(@"parsed c40 OK");
+                        break;
+                    case 45:
+                        // Send: <27> [ ? 4 5 l No Reverse-wraparound Mode. 
+                        NSLog(@"parsed c45 OK");
+                        break;
+                    default:
+                        NSLog(@"%@", [NSString stringWithFormat:@"Got a ESC [ ? %d l not handled.", *(bytes + 1)]);
+                        break;
+                        
+                }
+            }
+        }
+            break;
+            
+        case 'm': // set display attributes
+        {
+            if(len == 0) {
+                NSLog(@"%@", @"Defaults set - normal text");
+            } else {
+                arguments = [self parseNumerics:sequence length:len];
+                unsigned char *bytes = [arguments mutableBytes];
+                if(*bytes == 0) {
+                    NSLog(@"%@", @"Defaults set - normal text");
+                } else {
+                    NSLog(@"Would set some display attributes now");
+                }
+            }
+        }
+            break;
+        case 'r': // set top and bottom margins
+        {
+            if(len == 0) {
+                NSLog(@"%@", @"Default margins (entire screen) set");
+            } else {
+                arguments = [self parseNumerics:sequence length:len];
+                unsigned char *bytes = [arguments mutableBytes];
+
+                int topRow, bottomRow;
+                
+                if(*bytes == COMMAND_DEFAULT_VALUE)
+                    topRow = 1;
+                else 
+                    topRow = *bytes;
+                
+                if(*(bytes + 1) == COMMAND_DEFAULT_VALUE)
+                    bottomRow = 1;
+                else 
+                    bottomRow = *(bytes + 1);
+
+                NSLog(@"%@", [NSString stringWithFormat:@"top margin %d bottom margin %d", topRow, bottomRow]);
+            }
+        }
+            break;
         case 'A': // cursor up
         {
             count = [self parseSimpleNumeric:sequence length:len];
@@ -284,12 +335,15 @@
         case 'H':
         case 'f':
         {
-            NSMutableData *orderedNumerics = [self parseNumerics:sequence length:len];
-            unsigned char *bytes = [orderedNumerics mutableBytes];
-            if(*bytes > 24 || *(bytes + 1) > 80)
-                NSLog(@"Dodgy cursor position!");
-            else
-                [_displayDelegate cursorSetRow:*bytes column:*(bytes + 1)];
+            arguments = [self parseNumerics:sequence length:len];
+            unsigned char *bytes = [arguments mutableBytes];
+            int rowPosition = *bytes;
+            int columnPosition = *(bytes + 1);
+            if(rowPosition > 24)
+                rowPosition = 24;
+            if(columnPosition > 80)
+                columnPosition = 80;
+            [_displayDelegate cursorSetRow:rowPosition column:columnPosition];
             
         }
             break;
@@ -393,12 +447,32 @@ TerminalDataState transitionFromAnywhere(uint8_t character, int stateNow) {
     return takeState;
 }
 
+void logCommand(NSMutableData *data);
+
+void logCommand(NSMutableData *data) {
+    
+    int len = [data length];
+    NSMutableString *dataString = [NSMutableString stringWithCapacity:len];
+    
+    unsigned char *c = [data mutableBytes];
+    while(len--) {
+        unsigned char d = *c++;
+        if(d == 0x1b) {
+            [dataString appendFormat:@"%@", @"ESC"];
+        } else {
+            [dataString appendFormat:@"%c", d];
+        }
+    }
+    NSLog(@"%@", dataString);
+}
+
 - (void)processDataChunk {
     
     unsigned char *c = (unsigned char *)[dataForDisplay bytes];
     int len = [dataForDisplay length];
-    TerminalDataState state;
+    TerminalDataState state = kStateGround;
     TerminalDataState transitionState;
+    NSMutableData *param = [NSMutableData data];
 //    privateFlag;
 //    intermediateCharacters;
 //    finalCharacter;
@@ -408,6 +482,9 @@ TerminalDataState transitionFromAnywhere(uint8_t character, int stateNow) {
         uint8_t d = *c++;
         // some transitions can happen from "anywhere"
         if((transitionState = transitionFromAnywhere(d, state)) != state) {
+            if(transitionState == kStateEsc) {
+                
+            }
             if(transitionState == kStateEsc ||
                transitionState == kStateDCSEntry ||
                transitionState == kStateCSIEntry) {
@@ -415,7 +492,8 @@ TerminalDataState transitionFromAnywhere(uint8_t character, int stateNow) {
                 //    privateFlag;
                 //    intermediateCharacters;
                 //    finalCharacter;
-                //    parameters;
+                param = [NSMutableData data];
+                [param appendBytes:&d length:1];
             }
             state = transitionState;
             continue;
@@ -438,18 +516,18 @@ TerminalDataState transitionFromAnywhere(uint8_t character, int stateNow) {
                     //    privateFlag;
                     //    intermediateCharacters;
                     //    finalCharacter;
-                    //    parameters;
+                    param = [NSMutableData data];
                     state = kStateDCSEntry;
                 } else if(d == 0x58 ||
                           d == 0x5e ||
                           d == 0x5f) {
                     state = kStateSOSPMAPCString;
-                } else if(d == 0x5b) {
+                } else if(d == '[') {
                     // on entry, clear 
                     //    privateFlag;
                     //    intermediateCharacters;
                     //    finalCharacter;
-                    //    parameters;
+                    [param appendBytes:&d length:1];
                     state = kStateCSIEntry;
                 } else if(d == 0x5d) {
                     // sction osc_start TODO
@@ -480,17 +558,20 @@ TerminalDataState transitionFromAnywhere(uint8_t character, int stateNow) {
             case kStateCSIEntry:
                 if(isControlChar(d) == YES) {
                     [_displayDelegate characterNonDisplay:d];
-                } else if(d >= 0x40 || d <= 0x7e) {
-                    // action csi_dispatch TODO
+                } else if(d >= 0x40 && d <= 0x7e) {
+                    
+                    [param appendBytes:&d length:1];
+                    logCommand(param);
+                    [self processCommandSequence:param];
                     state = kStateGround;
-                } else if((d >= 0x30 || d <= 0x39) ||
+                } else if((d >= 0x30 && d <= 0x39) ||
                           d == 0x3b) {
-                    // action param TODO
+                    [param appendBytes:&d length:1];
                     state = kStateCSIParam;
-                } else if(d >= 0x3c || d <= 0x3f) {
-                    // action collect TODO
+                } else if(d >= 0x3c && d <= 0x3f) {
+                    [param appendBytes:&d length:1];
                     state = kStateCSIParam;
-                } else if(d >= 0x20 || d <= 0x2f) {
+                } else if(d >= 0x20 && d <= 0x2f) {
                     // action collect TODO
                     state = kStateCSIIntermediate;
                 } else if(d >= 0x3a) {
@@ -500,8 +581,13 @@ TerminalDataState transitionFromAnywhere(uint8_t character, int stateNow) {
             case kStateCSIParam:
                 if(isControlChar(d) == YES) {
                     [_displayDelegate characterNonDisplay:d];
-                } else if(d >= 0x40 || d <= 0x7e) {
-                    // action csi_dispatch TODO
+                } else if((d >= 0x30 && d <= 0x39) ||
+                          d == 0x3b) {
+                    [param appendBytes:&d length:1];
+                } else if(d >= 0x40 && d <= 0x7e) {
+                    [param appendBytes:&d length:1];
+                    logCommand(param);
+                    [self processCommandSequence:param];
                     state = kStateGround;
                 } else if((d >= 0x3c && d <= 0x3f) ||
                           d == 0x3a) {
@@ -516,7 +602,9 @@ TerminalDataState transitionFromAnywhere(uint8_t character, int stateNow) {
                 } else if(d >= 0x30 && d <= 0x3f) {
                     state = kStateCSIIgnore;
                 } else if(d >= 0x40 && d <= 0x7e) {
-                    // action csi_dispatch TODO
+                    [param appendBytes:&d length:1];
+                    logCommand(param);
+                    [self processCommandSequence:param];
                     state = kStateGround;
                 } // ignore 0x7f
                 break;
