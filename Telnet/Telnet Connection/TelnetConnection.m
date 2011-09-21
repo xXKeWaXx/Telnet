@@ -91,20 +91,15 @@
     // look for option handler in our option handler dict
     TelnetOptionHandler *optionHandler = [optionHandlers objectForKey:[NSNumber numberWithInt:option]];
           
-    if(optionHandler)
-        NSLog(@"option handler exists for option %d", option);
-    
     if(cmd == kTelnetCharWILL) {
         if(optionHandler && [optionHandler acceptsOption]) {
             [self sendOption:option command:kTelnetCharDO];
-            NSLog(@"Responded DO for option %d", option);
         } else {
             [self sendOption:option command:kTelnetCharDONT];
         }
     } else if(cmd == kTelnetCharDO) {
         if(optionHandler && [optionHandler acceptsOption]) {
             [self sendOption:option command:kTelnetCharWILL];
-            NSLog(@"Responded WILL for option %d", option);
         } else {
             [self sendOption:option command:kTelnetCharWONT];
         }

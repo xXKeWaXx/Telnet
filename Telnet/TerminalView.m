@@ -22,46 +22,31 @@
 @synthesize textIsReverse;
 @synthesize textIsHidden;
 
-
 /************************* terminal display private ***********************/
+
+// to avoid off-by-1 errors, array access is always done through these functions
+static inline int rowIndex(int rowNumber) { return rowNumber - 1; }
+static inline int colIndex(int colNumber) { return colNumber - 1; }
 
 - (id)initWithFrame:(CGRect)frame
 {
     self = [super initWithFrame:frame];
     if (self) {
         
-        /* this belongs in the terminal identity interpreter
-         commandSequenceHandlerDictionary = [NSDictionary dictionaryWithObjectsAndKeys:
-         cursorMoveDown, @"B",
-         cursorAbsolutePosition, @"H",
-         doClearLine, @"J",
-         setTextAttributes, @"m",
-         setWindow, @"r",
-         nil];
-         #define kNVTSpecialCharNUL  (0)
-         #define kNVTSpecialCharLF   (10)
-         #define kNVTSpecialCharCR   (13)
-         
-         
-         */
-        
         terminalRows = [NSMutableArray array];
         NSMutableArray *terminalArray;
-        CGFloat xPos;
-        CGFloat yPos;
+        CGFloat xPos = 0.f;
+        CGFloat yPos = 0.f;
         int i, j;
         
         // terminal rows are numbered from 1..kTerminalRows
         for(i = 1; i <= kTerminalRows; i++) {
             
             terminalArray = [NSMutableArray array];
-            yPos = (CGFloat)(i * kGlyphHeight);
-            
+
             // terminal columns are numbered from 1..kTerminalColumns
             for(j = 1; j <= kTerminalColumns; j++) {
-                
-                xPos = (CGFloat)(j * kGlyphWidth);
-                
+
                 NoAALabel *glyph = [[NoAALabel alloc] initWithFrame:CGRectMake(xPos, yPos, kGlyphWidth, kGlyphHeight)];
                 glyph.font = [UIFont fontWithName:@"Courier New" size:kGlyphFontSize];
                 glyph.textColor = [UIColor whiteColor];
@@ -71,8 +56,11 @@
                 glyph.column = j;
                 [terminalArray addObject:glyph];
                 [self addSubview:glyph];
+                xPos += kGlyphWidth;
             }
             [terminalRows addObject:terminalArray];
+            yPos += kGlyphHeight;
+            xPos = 0.f;
         }
         
         CGRect selfFrame = self.frame;
@@ -80,13 +68,11 @@
         selfFrame.size.height = kGlyphHeight * (CGFloat)kTerminalRows;
         self.frame = selfFrame;
         
-        // home is 1,1
-        [self cursorSetRow:1 column:1];
+        // cursor home, attributes reset
         [self displayReset];
     }
     return self;
 }
-
 
 // clear current glyph
 - (void)clearGlyph:(NoAALabel *)glyph {
@@ -96,13 +82,25 @@
     glyph.text = nil;
 }
 
-#pragma mark -
-#pragma mark private stuff
+// remove cursor attributes from current position
+- (void)cursorOff {
+    
+    NoAALabel *cursorGlyph = [[terminalRows objectAtIndex:rowIndex(terminalRow)] 
+                                            objectAtIndex:colIndex(terminalColumn)];
+    cursorGlyph.textColor = foregroundColor;
+    cursorGlyph.backgroundColor = backgroundColor;
+}
 
-// to avoid off-by-1 errors, array access is always done through these functions
-static inline int rowIndex(int rowNumber) { return rowNumber - 1; }
-static inline int colIndex(int colNumber) { return colNumber - 1; }
+// display cursor attributes in current position
+- (void)cursorOn {
+    
+    NoAALabel *cursorGlyph = [[terminalRows objectAtIndex:rowIndex(terminalRow)] 
+                              objectAtIndex:colIndex(terminalColumn)];
+    cursorGlyph.textColor = backgroundColor;
+    cursorGlyph.backgroundColor = foregroundColor;
+}
 
+// save the outgoing roll to the scrollback buffer, move top row to bottom (reuse) and move all glyphs up
 - (void)scrollUp {
     
     NSMutableArray *topLine = [terminalRows objectAtIndex:0];
@@ -133,6 +131,19 @@ static inline int colIndex(int colNumber) { return colNumber - 1; }
     [terminalRows addObject:topLine];
 }
 
+// the cursor advances downward because of a LF or other 
+- (void)advanceRow {
+
+    [self cursorOff];
+    if(terminalRow == kTerminalRows) {
+        [self scrollUp];
+        [self cursorSetRow:terminalRow column:terminalColumn];
+    } else {
+        [self cursorSetRow:terminalRow + 1 column:terminalColumn];
+    }
+    [self cursorOn];
+}
+
 - (void)clearRow:(int)row {
     
     NSArray *terminalRowArray = [terminalRows objectAtIndex:rowIndex(row)];
@@ -149,24 +160,28 @@ static inline int colIndex(int colNumber) { return colNumber - 1; }
 
     // current cursor position
     NoAALabel *cursorGlyph = [[terminalRows objectAtIndex:rowIndex(terminalRow)] objectAtIndex:colIndex(terminalColumn)];
-    // transform character into alternate sets if required (e.g. codepage 437)
+    // transform character into alternate sets if required (e.g. codepage 437) TODO
     cursorGlyph.text = [NSString stringWithFormat:@"%c", c];
-    // apply current styles to cursor
-    // advance cursor position obeying wrap settings
+    // apply current styles to cursor TODO
+    // advance cursor position obeying wrap settings TODO
     if(terminalColumn < kTerminalColumns)
-        terminalColumn++;
+        [self cursorSetRow:terminalRow column:terminalColumn + 1];
 }
 
 - (void)characterNonDisplay:(unsigned char)c {
 
     // perform whatever action is required by the non-printing character received
     switch(c) {
-        case kTelnetCharCR:     // advance row (possibly scrolling) and move to column 1
-            [self cursorSetRow:terminalRow + 1 column:1];
+        case kTelnetCharCR:     // move to column 1, carriage return
+            [self cursorSetRow:terminalRow column:1];
             break;
-        case kTelnetCharFF:
+        case kTelnetCharFF:     // advance row, remain in same column
         case kTelnetCharVT:
-        case kTelnetCharLF:     // advance row (possibly scrolling) in same column
+            [self advanceRow];
+            break;
+        case kTelnetCharLF:     // advance row, carriage return
+            [self advanceRow];
+            [self cursorSetRow:terminalRow column:1];
             break;
         case kTelnetCharHT:     // Next horizontal tabstop or right margin if there are no more
             break;
@@ -178,7 +193,6 @@ static inline int colIndex(int colNumber) { return colNumber - 1; }
         default:
             break;
     }
-
 }
 
 // CURSOR MOVEMENT
@@ -186,54 +200,41 @@ static inline int colIndex(int colNumber) { return colNumber - 1; }
 // Set cursor to arbitrary position
 - (void)cursorSetRow:(int)row column:(int)col {
 
-    if(row > kTerminalRows) {
-//        [self scrollUp];
-        row = kTerminalRows;
-    }
-    
-    // remove cursor indicator from old cursor position
-    NoAALabel *oldCursorGlyph = [[terminalRows objectAtIndex:rowIndex(row)] objectAtIndex:colIndex(col)];
-    oldCursorGlyph.textColor = [UIColor blackColor]; // TODO
+    [self cursorOff];
     
     // record cursor position
     terminalRow = row;
     terminalColumn = col;
     
-    // display cursor indicator at new cursor position
-    NoAALabel *newCursorGlyph = [[terminalRows objectAtIndex:rowIndex(row)] objectAtIndex:colIndex(col)];
-    newCursorGlyph.textColor = [UIColor yellowColor]; // TODO
+    [self cursorOn];
 }
 
 // move cursor left
 - (void)cursorLeft {
     
     if(terminalColumn > 1)
-        terminalColumn--;
-    [self cursorSetRow:terminalRow column:terminalColumn];
+        [self cursorSetRow:terminalRow column:terminalColumn - 1];
 }
 
 // move cursor up
 - (void)cursorUp {
     
     if(terminalRow > 1)
-        terminalRow--;
-    [self cursorSetRow:terminalRow column:terminalColumn];
+        [self cursorSetRow:terminalRow - 1 column:terminalColumn];
 }
 
 // move cursor right
 - (void)cursorRight {
     
     if(terminalColumn < kTerminalColumns)
-        terminalColumn++;
-    [self cursorSetRow:terminalRow column:terminalColumn];
+        [self cursorSetRow:terminalRow column:terminalColumn + 1];
 }
 
 // move cursor down
 - (void)cursorDown {
     
     if(terminalRow < kTerminalRows)
-        terminalRow++;
-    [self cursorSetRow:terminalRow column:terminalColumn];
+        [self cursorSetRow:terminalRow + 1 column:terminalColumn];
 }
 
 // CLEAR
@@ -392,6 +393,10 @@ static inline int colIndex(int colNumber) { return colNumber - 1; }
 - (void)displayReset {
     [self displaySetForegroundColor:kTermColorWhite];
     [self displaySetBackgroundColor:kTermColorBlack];
+    // this is the only place where row & column may be set
+    terminalRow = terminalColumn = 1;
+    [self cursorOn];
+
 }
 
 

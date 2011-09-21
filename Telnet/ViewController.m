@@ -60,6 +60,9 @@
 }
 
 - (void)textViewDidChange:(UITextView *)textView {
+
+    // textView doesn't send any control chars such as ESC, CTRL-C - some manual handling required
+    [identity displayData:[NSData dataWithBytes:[textView.text cStringUsingEncoding:NSASCIIStringEncoding] length:[textView.text length]]];
     
     [connection sendString:textView.text];
     textView.text = nil;
@@ -75,7 +78,7 @@
     
     // terminal view is the class that displays terminal interaction.
     // It implements TerminalDisplayDelegate
-    TerminalView *terminalView = [[TerminalView alloc] initWithFrame:CGRectMake(0.f, 0.f, 0.f, 0.f)];
+    TerminalView *terminalView = [[TerminalView alloc] initWithFrame:CGRectZero];
     [self.view addSubview:terminalView];
     CGFloat termWidth = terminalView.frame.size.width;
     
@@ -103,9 +106,9 @@
         // sudo sh-3.2# launchctl
         // launchd% load -F /System/Library/LaunchDaemons/telnet.plist
 
-    [connection open:@"172.16.0.230" port:23];
+//    [connection open:@"172.16.0.230" port:23];
 
-//    [connection open:@"127.0.0.1" port:23];
+    [connection open:@"127.0.0.1" port:23];
 
 //    [connection open:@"nethack.kraln.com" port:23];
 //[connection open:@"mud.genesismud.org" port:3011];

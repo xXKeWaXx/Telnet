@@ -39,10 +39,10 @@
 // ANSI command 'J'
 - (void)commandEraseScreen:(unsigned char)argument {
     switch(argument) {
-        case 0: // clear from cursor to end of screen
+        case '0': // clear from cursor to end of screen
             [_displayDelegate clearCursorBelow];
             break;
-        case 1: // clear from beginning of screen to cursor
+        case '1': // clear from beginning of screen to cursor
             [_displayDelegate clearCursorAbove];
             break;
         default: // clear all
@@ -53,10 +53,10 @@
 // ANSI command 'K'
 - (void)commandEraseLine:(unsigned char)argument {
     switch(argument) {
-        case 0: // clear from cursor to end of line
+        case '0': // clear from cursor to end of line
             [_displayDelegate clearCursorRight];
             break;
-        case 1: // clear from beginning of line to cursor
+        case '1': // clear from beginning of line to cursor
             [_displayDelegate clearCursorLeft];
             break;
         default:
@@ -82,6 +82,8 @@
             numeric += thisChar - '0';
         }
     }
+//    if(numeric == 0)
+//        numeric = COMMAND_DEFAULT_VALUE;
     return numeric;
 }
 
@@ -136,6 +138,14 @@
 // command sequence comes in reverse to make processing easier
 - (void)processANSICommandSequence:(unsigned char *)sequence withLength:(int)len {
     
+    NSMutableString *commandString = [NSMutableString string];
+    
+    for(int i = 1; i < len + 1; i++) {
+        [commandString appendFormat:@"%c", *(sequence + (len - i))];
+    }
+
+    NSLog(@"Sequence: %@", commandString);
+    
     unsigned char finalChar = *sequence;
     // finalChar is the first char, advance unless it is also last
     if(len > 0) {
@@ -165,13 +175,17 @@
             if(*bytes == '?') {
                 switch(*(bytes + 1)) {
                         
+                    case 3: 
+                        // P s = 3 → 132 Column Mode (DECCOLM)
+                        break;
+                    case 6:
+                        // P s = 6 → Origin Mode (DECOM)
+                        break;
                     case 7:
-                        // Send: <27> [ ? 7 h Wraparound Mode (DECAWM). 
-                        NSLog(@"parsed c3 OK");
+                        // P s = 7 → Wraparound Mode (DECAWM) 
                         break;
                     case 40:
-                        // Send: <27> [ ? 40 h Allow 80 → 132 Mode. 
-                        NSLog(@"parsed c3 OK");
+                        // P s = 4 0 → Allow 80 → 132 Mode
                         break;
                     default:
                         NSLog(@"%@", [NSString stringWithFormat:@"Got a ESC [ ? %d h not handled.", *(bytes + 1)]);
@@ -192,39 +206,30 @@
                         
                     case 1:
                         // Send: <27> [ ? 1 1 → Normal Cursor Keys (DECCKM). 
-                        NSLog(@"parsed c3 OK");
                         break;
                     case 3:
                         // Send: <27> [ ? 3 l 80 Column Mode (DECCOLM). 
-                        NSLog(@"parsed c3 OK");
                         break;
                     case 4:
                         // Send: <27> [ ? 4 l Jump (Fast) Scroll (DECSCLM).
-                        NSLog(@"parsed c4 OK");
                         break;
                     case 5:
                         // Send: <27> [ ? 5 l Normal Video (DECSCNM).  
-                        NSLog(@"parsed c5 OK");
                         break;
                     case 6:
                         // Send: <27> [ ? 6 l Normal Cursor Mode (DECOM). 
-                        NSLog(@"parsed c6 OK");
                         break;
                     case 7:
                         // Send: <27> [ ? 7 h No Wraparound Mode (DECAWM). 
-                        NSLog(@"parsed c7 OK");
                         break;
                     case 8:
                         // Send: <27> [ ? 8 l No Auto-repeat Keys (DECARM). 
-                        NSLog(@"parsed c8 OK");
                         break;
                     case 40:
                         // Send: <27> [ ? 4 0 h Disallow 80 → 132 Mode. 
-                        NSLog(@"parsed c40 OK");
                         break;
                     case 45:
                         // Send: <27> [ ? 4 5 l No Reverse-wraparound Mode. 
-                        NSLog(@"parsed c45 OK");
                         break;
                     default:
                         NSLog(@"%@", [NSString stringWithFormat:@"Got a ESC [ ? %d l not handled.", *(bytes + 1)]);
@@ -238,14 +243,14 @@
         case 'm': // set display attributes
         {
             if(len == 0) {
-                NSLog(@"%@", @"Defaults set - normal text");
+                // reset to default (plain) text
             } else {
                 arguments = [self parseNumerics:sequence length:len];
                 unsigned char *bytes = [arguments mutableBytes];
                 if(*bytes == 0) {
-                    NSLog(@"%@", @"Defaults set - normal text");
+                    // reset to default (plain) text
                 } else {
-                    NSLog(@"Would set some display attributes now");
+                    // set text attribute according to value
                 }
             }
         }
@@ -253,8 +258,10 @@
         case 'r': // set top and bottom margins
         {
             if(len == 0) {
-                NSLog(@"%@", @"Default margins (entire screen) set");
+                // Default margins (entire screen) set
             } else {
+                
+                // setting top and bottom margin
                 arguments = [self parseNumerics:sequence length:len];
                 unsigned char *bytes = [arguments mutableBytes];
 
@@ -270,7 +277,6 @@
                 else 
                     bottomRow = *(bytes + 1);
 
-                NSLog(@"%@", [NSString stringWithFormat:@"top margin %d bottom margin %d", topRow, bottomRow]);
             }
         }
             break;
@@ -335,14 +341,25 @@
         case 'H':
         case 'f':
         {
-            arguments = [self parseNumerics:sequence length:len];
-            unsigned char *bytes = [arguments mutableBytes];
-            int rowPosition = *bytes;
-            int columnPosition = *(bytes + 1);
-            if(rowPosition > 24)
-                rowPosition = 24;
-            if(columnPosition > 80)
-                columnPosition = 80;
+            int rowPosition = 1;
+            int columnPosition = 1;
+            
+            if(len == 0) {
+                // home command
+                rowPosition = 1;
+                columnPosition = 1;
+            } else {
+                arguments = [self parseNumerics:sequence length:len];
+                unsigned char *bytes = [arguments mutableBytes];
+                rowPosition = *bytes;
+                columnPosition = *(bytes + 1);
+                
+                
+                if(rowPosition == COMMAND_DEFAULT_VALUE)
+                    rowPosition = 1;
+                if(columnPosition == COMMAND_DEFAULT_VALUE)
+                    columnPosition = 1;
+            }
             [_displayDelegate cursorSetRow:rowPosition column:columnPosition];
             
         }
@@ -409,12 +426,20 @@ typedef enum _TerminalDataState {
 } TerminalDataState;
 
 BOOL isControlChar(uint8_t character);
+BOOL isPrintableChar(uint8_t character);
+
 TerminalDataState transitionFromAnywhere(uint8_t character, int stateNow);
 
 BOOL isControlChar(uint8_t character) {
-    if ((character > 0x00 && character < 0x17) ||
+    if ((character >= 0x00 && character <= 0x17) ||
         (character == 0x19) ||
         (character >= 0x1c && character <= 0x1f))
+        return YES;
+    return NO;
+}
+
+BOOL isPrintableChar(uint8_t character) {
+    if(character >= 0x20 && character <= 0x7f)
         return YES;
     return NO;
 }
@@ -463,13 +488,13 @@ void logCommand(NSMutableData *data) {
             [dataString appendFormat:@"%c", d];
         }
     }
-    NSLog(@"%@", dataString);
 }
 
 - (void)processDataChunk {
     
     unsigned char *c = (unsigned char *)[dataForDisplay bytes];
     int len = [dataForDisplay length];
+    
     TerminalDataState state = kStateGround;
     TerminalDataState transitionState;
     NSMutableData *param = [NSMutableData data];
@@ -501,7 +526,7 @@ void logCommand(NSMutableData *data) {
         
         switch(state) {
             case kStateGround:
-                if(d > 0x20 && d < 0x7f) { 
+                if(isPrintableChar(d)) { 
                     // display printable chars
                     [_displayDelegate characterDisplay:d];
                 } else if(isControlChar(d) == YES) { 
@@ -537,7 +562,7 @@ void logCommand(NSMutableData *data) {
                           d == 0x59 ||
                           d == 0x5a ||
                           d == 0x5c ||
-                          (d >= 0x60 && d < 0x7e)) {
+                          (d >= 0x60 && d <= 0x7e)) {
                     // action esc_dispatch TODO
                     state = kStateGround;
                 } else if(d >= 0x20 && d <= 0x2f) {
@@ -636,9 +661,9 @@ void logCommand(NSMutableData *data) {
                 break;
             case kStateDCSParam:
                 // ignore control chars here
-                if((d >= 0x30 && d < 0x39) || d == 0x3b) {
+                if((d >= 0x30 && d <= 0x39) || d == 0x3b) {
                     // action param TODO
-                } else if((d >= 0x3c && d < 0x3f) || d == 0x3a) {
+                } else if((d >= 0x3c && d <= 0x3f) || d == 0x3a) {
                     // action param TODO
                     state = kStateDCSIgnore;
                 } else if(d >= 0x40 && d <= 0x7e) {
