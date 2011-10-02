@@ -8,11 +8,23 @@
 		<array>
 			<dict>
 				<key>TelnetOptionNumber</key>
+				<integer>1</integer>
+				<key>TelnetOptionClassname</key>
+				<string>TelnetOptionEcho</string>
+				<key>TelnetOptionIsSupported</key>
+				<false/>
+				<key>TelnetOptionHostPerforms</key>
+				<string>YES</string>
+			</dict>
+			<dict>
+				<key>TelnetOptionNumber</key>
 				<integer>3</integer>
 				<key>TelnetOptionClassname</key>
-				<string>TelnetOptionHandler</string>
+				<string>TelnetOptionSGA</string>
 				<key>TelnetOptionIsSupported</key>
 				<true/>
+				<key>TelnetOptionHostPerforms</key>
+				<string>YES</string>
 			</dict>
 			<dict>
 				<key>TelnetOptionNumber</key>
@@ -21,6 +33,8 @@
 				<string>TelnetOptionTerminalType</string>
 				<key>TelnetOptionIsSupported</key>
 				<true/>
+				<key>TelnetOptionHostPerforms</key>
+				<string>YES</string>
 			</dict>
 		</array>
 	</dict>

@@ -11,6 +11,7 @@
 @implementation TelnetOptionHandler
 
 @synthesize acceptsOption = _acceptsOption;
+@synthesize hostPerforms = _hostPerforms;
 
 
 @end

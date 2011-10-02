@@ -63,6 +63,17 @@ static inline int colIndex(int colNumber) { return colNumber - 1; }
             xPos = 0.f;
         }
         
+        // tab stops are initially every 8 characters beginning in the first column
+        int tabStop = 1;
+        tabStops = [[NSMutableArray alloc] init];
+        do {
+            
+            [tabStops addObject:[NSNumber numberWithInt:tabStop]];
+            tabStop += 8;
+            
+        }while(tabStop < kTerminalColumns);
+        
+        
         CGRect selfFrame = self.frame;
         selfFrame.size.width = kGlyphWidth * (CGFloat)kTerminalColumns;
         selfFrame.size.height = kGlyphHeight * (CGFloat)kTerminalRows;
@@ -184,6 +195,19 @@ static inline int colIndex(int colNumber) { return colNumber - 1; }
             [self cursorSetRow:terminalRow column:1];
             break;
         case kTelnetCharHT:     // Next horizontal tabstop or right margin if there are no more
+        {
+            // look for next tabstop after current column position
+            int tabFound = 0;
+            for(NSNumber *tabStopNumber in tabStops) {
+                if([tabStopNumber intValue] > terminalColumn) {
+                    tabFound = [tabStopNumber intValue];
+                    break;
+                }
+            }
+            if(tabFound != 0) {
+                [self cursorSetRow:terminalRow column:tabFound];
+            }
+        }
             break;
         case kTelnetCharBS:     // Backspace
             break;

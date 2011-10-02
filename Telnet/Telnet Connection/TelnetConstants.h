@@ -11,10 +11,11 @@
 
 // JSON configuration data 
 
-#define kTelnetOptionsArray     (@"Telnet Options")
-#define kTelnetOptionNumber     (@"TelnetOptionNumber")
-#define kTelnetOptionClassname  (@"TelnetOptionClassname")
-#define kTelnetOptionSupported  (@"TelnetOptionIsSupported")
+#define kTelnetOptionsArray         (@"Telnet Options")
+#define kTelnetOptionNumber         (@"TelnetOptionNumber")
+#define kTelnetOptionClassname      (@"TelnetOptionClassname")
+#define kTelnetOptionSupported      (@"TelnetOptionIsSupported")
+#define kTelnetOptionHostPerforms   (@"TelnetOptionHostPerforms")
 
 // subnegotiation
 

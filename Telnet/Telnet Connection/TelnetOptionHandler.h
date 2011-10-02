@@ -12,8 +12,10 @@
 @interface TelnetOptionHandler : NSObject {
     
     BOOL _acceptsOption;
+    BOOL _hostPerforms;
 }
 
 @property (nonatomic) BOOL acceptsOption;
+@property (nonatomic) BOOL hostPerforms;
 
 @end

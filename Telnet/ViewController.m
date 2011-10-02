@@ -62,7 +62,7 @@
 - (void)textViewDidChange:(UITextView *)textView {
 
     // textView doesn't send any control chars such as ESC, CTRL-C - some manual handling required
-    [identity displayData:[NSData dataWithBytes:[textView.text cStringUsingEncoding:NSASCIIStringEncoding] length:[textView.text length]]];
+ //   [identity displayData:[NSData dataWithBytes:[textView.text cStringUsingEncoding:NSASCIIStringEncoding] length:[textView.text length]]];
     
     [connection sendString:textView.text];
     textView.text = nil;

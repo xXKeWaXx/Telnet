@@ -15,27 +15,6 @@
 @synthesize displayDelegate = _displayDelegate;
 @synthesize responderDelegate = _responderDelegate;
 
-- (BOOL)isTelnetControl:(unsigned char)c {
-
-    if(c == 000     // NUL
-       || c == 005  // ENQ
-       || c == 007  // BEL
-       || c == 010  // BS
-       || c == 011  // HT
-       || c == 012  // LF
-       || c == 013  // VT
-       || c == 014  // FF
-       || c == 015) // CR
-        return YES;
-    return NO;
-}
-- (BOOL)isTelnetPrintable:(unsigned char)c {
-
-    if(c >= 32 && c <= 126)
-        return YES;
-    return NO;
-}
-
 // ANSI command 'J'
 - (void)commandEraseScreen:(unsigned char)argument {
     switch(argument) {
@@ -528,6 +507,7 @@ void logCommand(NSMutableData *data) {
             case kStateGround:
                 if(isPrintableChar(d)) { 
                     // display printable chars
+                    NSLog(@"Printable: %c", d);
                     [_displayDelegate characterDisplay:d];
                 } else if(isControlChar(d) == YES) { 
                     [_displayDelegate characterNonDisplay:d];

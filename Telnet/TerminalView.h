@@ -36,6 +36,8 @@
     BOOL textIsReverse;
     BOOL textIsHidden;
 
+    NSMutableArray *tabStops;
+    
     UIColor *foregroundColor;
     UIColor *backgroundColor;
 

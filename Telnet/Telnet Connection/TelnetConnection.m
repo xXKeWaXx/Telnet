@@ -40,6 +40,7 @@
         handlerClass = NSClassFromString([optionsDictionary objectForKey:kTelnetOptionClassname]);
         TelnetOptionHandler *optionHandler = [[handlerClass alloc] init];
         optionHandler.acceptsOption = [[optionsDictionary objectForKey:kTelnetOptionSupported] boolValue];
+        optionHandler.hostPerforms = [[optionsDictionary objectForKey:kTelnetOptionHostPerforms] boolValue];
         [optionHandlers setObject:optionHandler forKey:[optionsDictionary objectForKey:kTelnetOptionNumber]];
     }
 }
@@ -92,7 +93,7 @@
     TelnetOptionHandler *optionHandler = [optionHandlers objectForKey:[NSNumber numberWithInt:option]];
           
     if(cmd == kTelnetCharWILL) {
-        if(optionHandler && [optionHandler acceptsOption]) {
+        if(optionHandler && [optionHandler hostPerforms]) {
             [self sendOption:option command:kTelnetCharDO];
         } else {
             [self sendOption:option command:kTelnetCharDONT];
