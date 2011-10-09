@@ -22,7 +22,11 @@
 // VT100 text attributes
 
 @interface TerminalView : UIView <TerminalDisplayDelegate> {
-    
+   
+    // cursor position
+    int _terminalRow;
+    int _terminalColumn;
+
     NSDictionary *commandSequenceHandlerDictionary;
     
     // DEC window gives start and end row, e.g. ESC[1;24r = rows 1 to 24 are the current window.
@@ -40,9 +44,6 @@
     
     UIColor *foregroundColor;
     UIColor *backgroundColor;
-
-    int terminalRow;
-    int terminalColumn;
     
     NoAALabel *cursor;
     
@@ -52,6 +53,7 @@
     NSMutableArray *underlinedGlyphs;
     NSMutableArray *blinkingGlyphs;
     
+    BOOL decawm;
 }
 
 @property BOOL textIsBright;
@@ -65,5 +67,7 @@
 @property int windowEnds;
 @property (nonatomic, retain) NoAALabel *cursor;
 @property (nonatomic, retain) NSMutableArray *terminalRows;
+
+@property BOOL decawm;
 
 @end

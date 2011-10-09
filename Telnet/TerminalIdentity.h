@@ -24,15 +24,20 @@ typedef enum _TerminalResponseType {
 @protocol TerminalDisplayDelegate <NSObject>
 
 // display characters
+- (void)fillScreenWithChar:(unsigned char)c;
 - (void)characterDisplay:(unsigned char)c;
 - (void)characterNonDisplay:(unsigned char)c;
 
 // move cursor position
+- (void)advanceRow;
+- (void)decreaseRow;
 - (void)cursorSetRow:(int)row column:(int)col;
+- (void)cursorSetColumn:(int)col;
 - (void)cursorLeft;
 - (void)cursorUp;
 - (void)cursorRight;
 - (void)cursorDown;
+- (void)setAutoWrapMode:(BOOL)wrap;
 
 // clear
 - (void)clearAll;

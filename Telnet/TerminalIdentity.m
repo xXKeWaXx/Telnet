@@ -32,10 +32,10 @@
 // ANSI command 'K'
 - (void)commandEraseLine:(unsigned char)argument {
     switch(argument) {
-        case '0': // clear from cursor to end of line
+        case '0': // clear from cursor through end of line
             [_displayDelegate clearCursorRight];
             break;
-        case '1': // clear from beginning of line to cursor
+        case '1': // clear from beginning of line through cursor
             [_displayDelegate clearCursorLeft];
             break;
         default:
@@ -123,8 +123,6 @@
         [commandString appendFormat:@"%c", *(sequence + (len - i))];
     }
 
-    NSLog(@"Sequence: %@", commandString);
-    
     unsigned char finalChar = *sequence;
     // finalChar is the first char, advance unless it is also last
     if(len > 0) {
@@ -146,7 +144,7 @@
         }
             break;
             
-        case 'h':
+        case 'h': // SET DEC private modes DECSET
         {
             arguments = [self parseNumerics:sequence length:len];
             unsigned char *bytes = [arguments mutableBytes];
@@ -156,18 +154,21 @@
                         
                     case 3: 
                         // P s = 3 → 132 Column Mode (DECCOLM)
+                        NSLog(@"unhandled");
                         break;
                     case 6:
                         // P s = 6 → Origin Mode (DECOM)
+                        NSLog(@"unhandled");
                         break;
                     case 7:
                         // P s = 7 → Wraparound Mode (DECAWM) 
+                        [_displayDelegate setAutoWrapMode:NO];
                         break;
                     case 40:
                         // P s = 4 0 → Allow 80 → 132 Mode
+                        NSLog(@"unhandled");
                         break;
                     default:
-                        NSLog(@"%@", [NSString stringWithFormat:@"Got a ESC [ ? %d h not handled.", *(bytes + 1)]);
                         break;
                         
                 }
@@ -175,7 +176,7 @@
         }
             break;
 
-        case 'l':
+        case 'l':  // RESET DEC private modes DECRST
         {
             arguments = [self parseNumerics:sequence length:len];
             unsigned char *bytes = [arguments mutableBytes];
@@ -211,7 +212,6 @@
                         // Send: <27> [ ? 4 5 l No Reverse-wraparound Mode. 
                         break;
                     default:
-                        NSLog(@"%@", [NSString stringWithFormat:@"Got a ESC [ ? %d l not handled.", *(bytes + 1)]);
                         break;
                         
                 }
@@ -259,43 +259,59 @@
             }
         }
             break;
-        case 'A': // cursor up
+        case 'A': // CUU cursor up
         {
             count = [self parseSimpleNumeric:sequence length:len];
-            if(count == COMMAND_DEFAULT_VALUE)
+            if(count == COMMAND_DEFAULT_VALUE) 
                 count = 1;
+            
+            if(count == 0)
+                count = 1;
+
             while(count--)
                 [_displayDelegate cursorUp];
         }
             break;
-        case 'B': // cursor down
+        case 'B': // CUD cursor down
         {
             count = [self parseSimpleNumeric:sequence length:len];
             if(count == COMMAND_DEFAULT_VALUE)
                 count = 1;
+                
+                if(count == 0)
+                    count = 1;
+
             while(count--)
                 [_displayDelegate cursorDown];
         }
             break;
-        case 'C': // cursor forward (right)
+        case 'C': // CUF cursor forward
         {
             count = [self parseSimpleNumeric:sequence length:len];
             if(count == COMMAND_DEFAULT_VALUE)
                 count = 1;
+            
+            if(count == 0)
+                count = 1;
+
             while(count--)
                 [_displayDelegate cursorRight];
         }
             break;
-        case 'D': // cursor backward (left)
+        case 'D': // CUB cursor backward
         {
             count = [self parseSimpleNumeric:sequence length:len];
             if(count == COMMAND_DEFAULT_VALUE)
                 count = 1;
+            
+            if(count == 0)
+                count = 1;
+
             while(count--)
                 [_displayDelegate cursorLeft];
         }
             break;
-        case 'J':
+        case 'J': // ED erase in dsplay
         {
             switch(len) {
                 case 0: // default erase to end of screen
@@ -307,7 +323,7 @@
             }
         }
             break;
-        case 'K':
+        case 'K': // EL Erase in line
             switch(len) {
                 case 0: // default erase to end of screen
                     [self commandEraseLine:'0'];
@@ -318,7 +334,7 @@
             }
             break;
         case 'H':
-        case 'f':
+        case 'f': // HVP horizontal and vertical position
         {
             int rowPosition = 1;
             int columnPosition = 1;
@@ -344,16 +360,55 @@
         }
             break;
         default:
-            NSLog(@"Unhandled command sequence finalChar %c", finalChar);
+            NSLog(@"Unhandled ANSI command sequence finalChar %c", finalChar);
     }
     
 }
 
 - (void)processDECCommandSequence:(unsigned char *)sequence withLength:(int)len {
-    NSString *commandDebugString = [NSString string];
     
-    while(len--) {
-        commandDebugString = [commandDebugString stringByAppendingFormat:@"%c", *sequence++];
+    NSMutableString *commandString = [NSMutableString string];
+    
+    for(int i = 1; i < len + 1; i++) {
+        [commandString appendFormat:@"%c", *(sequence + (len - i))];
+    }
+    
+    unsigned char finalChar = *sequence;
+    // finalChar is the first char, advance unless it is also last
+    if(len > 0) {
+        len--; 
+        sequence++;
+    }
+    
+    switch(finalChar) {
+        case '8': {
+            if(len == 0) {
+                // restore cursor previously saved attributes
+                NSLog(@"unhandled");
+            } else if ((len == 1) && (*sequence == '#')) {  // DECALN
+                // test mode; fill screen with 'E' chars
+                [_displayDelegate fillScreenWithChar:'E'];
+            }
+        }
+            break;
+            
+        case 'D': { // IND cursor index
+            [_displayDelegate advanceRow];
+            
+        }
+            break;
+        case 'E': { // NEL first position on next line
+            [_displayDelegate advanceRow];
+            [_displayDelegate cursorSetColumn:1];
+        }
+            break;
+        case 'M': { // RI
+            [_displayDelegate decreaseRow];
+        }
+            break;
+        default:
+            NSLog(@"Unhandled DEC command sequence %c", finalChar);
+            break;
     }
 }
 
@@ -452,6 +507,16 @@ TerminalDataState transitionFromAnywhere(uint8_t character, int stateNow) {
 }
 
 void logCommand(NSMutableData *data);
+void logPrintable(char c);
+void logNonPrintable(char c);
+
+void logPrintable(char c) {
+   // NSLog(@"printable: %c", c);
+}
+
+void logNonPrintable(char c) {
+   // NSLog(@"non-printable: %d", c);
+}
 
 void logCommand(NSMutableData *data) {
     
@@ -467,6 +532,8 @@ void logCommand(NSMutableData *data) {
             [dataString appendFormat:@"%c", d];
         }
     }
+    
+    NSLog(@"command: %@", dataString);
 }
 
 - (void)processDataChunk {
@@ -474,7 +541,7 @@ void logCommand(NSMutableData *data) {
     unsigned char *c = (unsigned char *)[dataForDisplay bytes];
     int len = [dataForDisplay length];
     
-    TerminalDataState state = kStateGround;
+    static TerminalDataState state = kStateGround;
     TerminalDataState transitionState;
     NSMutableData *param = [NSMutableData data];
 //    privateFlag;
@@ -486,9 +553,7 @@ void logCommand(NSMutableData *data) {
         uint8_t d = *c++;
         // some transitions can happen from "anywhere"
         if((transitionState = transitionFromAnywhere(d, state)) != state) {
-            if(transitionState == kStateEsc) {
-                
-            }
+
             if(transitionState == kStateEsc ||
                transitionState == kStateDCSEntry ||
                transitionState == kStateCSIEntry) {
@@ -506,10 +571,10 @@ void logCommand(NSMutableData *data) {
         switch(state) {
             case kStateGround:
                 if(isPrintableChar(d)) { 
-                    // display printable chars
-                    NSLog(@"Printable: %c", d);
+                    logPrintable(d);
                     [_displayDelegate characterDisplay:d];
                 } else if(isControlChar(d) == YES) { 
+                    logNonPrintable(d);
                     [_displayDelegate characterNonDisplay:d];
                 }
                 break;
@@ -543,31 +608,40 @@ void logCommand(NSMutableData *data) {
                           d == 0x5a ||
                           d == 0x5c ||
                           (d >= 0x60 && d <= 0x7e)) {
-                    // action esc_dispatch TODO
+                    [param appendBytes:&d length:1];
+                    //logCommand(param);
+                    [self processCommandSequence:param];
+                    param = [NSMutableData data];
                     state = kStateGround;
                 } else if(d >= 0x20 && d <= 0x2f) {
-                    // action collect TODO
+                    [param appendBytes:&d length:1];
                     state = kStateEscIntermediate;
                 } // ignore 0x7f
                 break;
             case kStateEscIntermediate:
                 if(isControlChar(d) == YES) {
+                    logNonPrintable(d);
                     [_displayDelegate characterNonDisplay:d];
                 } else if(d >= 0x20 && d <= 0x2f) {
-                    // action collect TODO
+                    NSLog(@"What is this?");
+                    [param appendBytes:&d length:1];
                 } else if(d >= 0x30 && d <= 0x7e) {
-                    // action esc_dispatch TODO
+                    [param appendBytes:&d length:1];
+                    //logCommand(param);
+                    [self processCommandSequence:param];
+                    param = [NSMutableData data];
                     state = kStateGround;
                 } // ignore 0x7f
                 break;
             case kStateCSIEntry:
                 if(isControlChar(d) == YES) {
+                    logNonPrintable(d);
                     [_displayDelegate characterNonDisplay:d];
                 } else if(d >= 0x40 && d <= 0x7e) {
-                    
                     [param appendBytes:&d length:1];
-                    logCommand(param);
+                    //logCommand(param);
                     [self processCommandSequence:param];
+                    param = [NSMutableData data];
                     state = kStateGround;
                 } else if((d >= 0x30 && d <= 0x39) ||
                           d == 0x3b) {
@@ -577,7 +651,8 @@ void logCommand(NSMutableData *data) {
                     [param appendBytes:&d length:1];
                     state = kStateCSIParam;
                 } else if(d >= 0x20 && d <= 0x2f) {
-                    // action collect TODO
+                    NSLog(@"What is THIS?");
+                    [param appendBytes:&d length:1];
                     state = kStateCSIIntermediate;
                 } else if(d >= 0x3a) {
                     state = kStateCSIIgnore;
@@ -591,8 +666,9 @@ void logCommand(NSMutableData *data) {
                     [param appendBytes:&d length:1];
                 } else if(d >= 0x40 && d <= 0x7e) {
                     [param appendBytes:&d length:1];
-                    logCommand(param);
+                    //logCommand(param);
                     [self processCommandSequence:param];
+                    param = [NSMutableData data];
                     state = kStateGround;
                 } else if((d >= 0x3c && d <= 0x3f) ||
                           d == 0x3a) {
@@ -601,20 +677,24 @@ void logCommand(NSMutableData *data) {
                 break;
             case kStateCSIIntermediate:
                 if(isControlChar(d) == YES) {
+                    logNonPrintable(d);
                     [_displayDelegate characterNonDisplay:d];
                 } else if(d >= 0x20 && d <= 0x2f) {
-                    // action collect TODO
+                    NSLog(@"And this?");
+                    [param appendBytes:&d length:1];
                 } else if(d >= 0x30 && d <= 0x3f) {
                     state = kStateCSIIgnore;
                 } else if(d >= 0x40 && d <= 0x7e) {
                     [param appendBytes:&d length:1];
-                    logCommand(param);
+                    //logCommand(param);
                     [self processCommandSequence:param];
+                    param = [NSMutableData data];
                     state = kStateGround;
                 } // ignore 0x7f
                 break;
             case kStateCSIIgnore:
                 if(isControlChar(d) == YES) {
+                    logNonPrintable(d);
                     [_displayDelegate characterNonDisplay:d];
                 } else if(d >= 0x40 && d <= 0x7e) {
                     state = kStateGround;
@@ -623,16 +703,19 @@ void logCommand(NSMutableData *data) {
             case kStateDCSEntry:
                 // ignore control chars here
                 if(d >= 0x20 && d <= 0x2f) {
-                    // action collect TODO
+                    NSLog(@"Don't expect this...");
+                    [param appendBytes:&d length:1];
                     state = kStateDCSIntermediate;
                 } else if(d == 0x3a) {
                     state = kStateDCSIgnore;
                 } else if((d >= 0x30 && d <= 0x39) ||
                           d == 0x3b) {
-                    // action param TODO
+                    NSLog(@"Don't expect this...");
+                    [param appendBytes:&d length:1];
                     state = kStateDCSParam;
                 } else if(d >= 0x3c && d <= 0x3f) {
-                    // action collect TODO
+                    NSLog(@"Don't expect this...");
+                    [param appendBytes:&d length:1];
                     state = kStateDCSParam;
                 } else if(d >= 0x40 && d <= 0x7e) {
                     // action hook TODO
@@ -696,10 +779,10 @@ void logCommand(NSMutableData *data) {
         }
     }
         
-    if(len > 0) {
-        dataForDisplay = [NSMutableData dataWithBytes:c length:len];
-        // more data to display, allow run loop to continue and return here
-        [self performSelector:@selector(processDataChunk) withObject:nil afterDelay:0.0f];
+    if([param length] > 0) {
+        // a command is still being received, save and append the rest as it appears
+        dataForDisplay = param;
+        logCommand(param);
     } else {
         dataForDisplay = nil;
     }
@@ -711,14 +794,19 @@ void logCommand(NSMutableData *data) {
 // display each of the bytes in the view advancing cursor position
 - (void)displayData:(NSData *)data {
     
-    if(dataForDisplay == nil)
+    if(dataForDisplay == nil) {
         dataForDisplay = [data mutableCopy];
-    else
+    } else {
+        
+        NSLog(@"Appending data received %d bytes", [data length]);
         [dataForDisplay appendData:data];
+    }
     
     // processDataChunk is a method that can proceed with display until it should break,
     // e.g. to facilitate terminal animation or other ancient tricks.
-    [self processDataChunk];
+    [self performSelectorOnMainThread:@selector(processDataChunk) 
+                           withObject:nil 
+                        waitUntilDone:YES];
 }
 
 @end

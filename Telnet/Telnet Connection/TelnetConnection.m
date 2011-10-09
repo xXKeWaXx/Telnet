@@ -408,7 +408,7 @@
         }
     }
     
-    [(NSObject *)_identityDelegate performSelectorOnMainThread:@selector(displayData:) withObject:dataForDisplay waitUntilDone:NO];
+    [(NSObject *)_identityDelegate performSelectorOnMainThread:@selector(displayData:) withObject:dataForDisplay waitUntilDone:YES];
     
     dataForDisplay = nil;
 
