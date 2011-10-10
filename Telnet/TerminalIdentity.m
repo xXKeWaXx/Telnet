@@ -61,8 +61,8 @@
             numeric += thisChar - '0';
         }
     }
-//    if(numeric == 0)
-//        numeric = COMMAND_DEFAULT_VALUE;
+    if(numeric == 0)
+        numeric = COMMAND_DEFAULT_VALUE;
     return numeric;
 }
 
@@ -348,7 +348,6 @@
                 unsigned char *bytes = [arguments mutableBytes];
                 rowPosition = *bytes;
                 columnPosition = *(bytes + 1);
-                
                 
                 if(rowPosition == COMMAND_DEFAULT_VALUE)
                     rowPosition = 1;

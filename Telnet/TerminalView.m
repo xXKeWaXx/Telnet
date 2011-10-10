@@ -227,14 +227,16 @@ static inline int colIndex(int colNum) { return colNum - 1; }
             break;
         case kTelnetCharBS:     // Backspace
         {
-            // erase glyph at current position
-            NSArray *rowArray = [terminalRows objectAtIndex:rowIndex(_terminalRow)];
-            NoAALabel *glyph;
-            glyph = [rowArray objectAtIndex:colIndex(_terminalColumn)];
-            [self clearGlyph:glyph];
+            if(_terminalColumn > 1) {
+                // erase glyph at previous position
+                NSArray *rowArray = [terminalRows objectAtIndex:rowIndex(_terminalRow)];
+//                NoAALabel *glyph;
+//                glyph = [rowArray objectAtIndex:colIndex(_terminalColumn - 1)];
+//                [self clearGlyph:glyph];
 
-            // move cursor left
-            [self cursorLeft];
+                // move cursor left
+                [self cursorLeft];
+            }
         }
             break;
         case kTelnetCharBEL:    // ding!
@@ -283,6 +285,7 @@ static inline int colIndex(int colNum) { return colNum - 1; }
         row = kTerminalRows;
     if(col > kTerminalColumns)
         col = kTerminalColumns;
+    
     // record cursor position
     _terminalRow = row;
     _terminalColumn = col;
