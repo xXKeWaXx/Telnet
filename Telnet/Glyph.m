@@ -1,17 +1,14 @@
 //
-//  NoAALabel.m
+//  Glyph.m
 //  TerminalAppView
 //
 //  Created by Adam Eberbach on 14/08/11.
 //  Copyright (c) 2011 Adam Eberbach. All rights reserved.
 //
 
-#import "NoAALabel.h"
+#import "Glyph.h"
 
-@implementation NoAALabel
-
-@synthesize row;
-@synthesize column;
+@implementation Glyph
 
 // set glyph to the current erase state, with no text set
 - (void)erase {

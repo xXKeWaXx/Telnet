@@ -15,18 +15,20 @@
 #define kTerminalRows (24)
 #define kTerminalColumns (80)
 
-#define kGlyphFontSize (15.f)
-#define kGlyphWidth (9.f)
-#define kGlyphHeight (18.f)
 
 // VT100 text attributes
 
 @interface TerminalView : UIView <TerminalDisplayDelegate> {
    
-    // cursor position
-    int _terminalRow;
-    int _terminalColumn;
+    // cursor position 
+//    int _terminalRow;
+//    int _terminalColumn;
 
+    int topMargin;
+    int bottomMargin;
+    
+    BOOL originMode;
+    
     NSDictionary *commandSequenceHandlerDictionary;
     
     // DEC window gives start and end row, e.g. ESC[1;24r = rows 1 to 24 are the current window.

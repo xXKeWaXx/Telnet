@@ -13,8 +13,8 @@
 #import "TelnetOptionHandler.h"
 #import "TelnetConstants.h"
 
-@protocol TerminalIdentityDelegate
-- (void)displayData:(NSData *)data;
+@protocol ParserDelegate <NSObject>
+- (void)parseData:(NSData *)data;
 @end
 
 // The TelnetConnection object handles the management of the telnet session including the interpretation of
@@ -22,12 +22,13 @@
 
 @interface TelnetConnection : NSObject <GCDAsyncSocketDelegate> {
 
-    id<TerminalIdentityDelegate> __weak _identityDelegate; // the interpreter module, i.e. VT220
+    id<ParserDelegate> __weak parserDelegate;
+    
     NSMutableDictionary *optionHandlers;
     GCDAsyncSocket *socket;
     long readSequence;
     long writeSequence;
-    NSMutableData *dataForDisplay;
+    NSMutableData *networkData;
     TelnetState receiveState;
     BOOL inSynch;
     // Subnegotiation of options
@@ -42,6 +43,6 @@
 - (void)read;
 - (void)setOptions:(NSString *)jsonOptions;
 
-@property id<TerminalIdentityDelegate> __weak identityDelegate;
+@property id<ParserDelegate> __weak parserDelegate;
 
 @end

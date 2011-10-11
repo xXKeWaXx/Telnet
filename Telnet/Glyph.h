@@ -1,5 +1,5 @@
 //
-//  NoAALabel.h
+//  Glyph.h
 //  TerminalAppView
 //
 //  Created by Adam Eberbach on 14/08/11.
@@ -7,6 +7,10 @@
 //
 
 #import <UIKit/UIKit.h>
+
+#define kGlyphFontSize (15.f)
+#define kGlyphWidth (9.f)
+#define kGlyphHeight (18.f)
 
 typedef enum _intensity {
    
@@ -29,7 +33,7 @@ typedef enum _color {
     
 } GlyphColor;
 
-@interface NoAALabel : UILabel {
+@interface Glyph : UILabel {
 
     GlyphColor color;
     GlyphIntensity intensity;
@@ -38,8 +42,6 @@ typedef enum _color {
     
 }
 
-@property int row;
-@property int column;
-
 - (void)erase;
+
 @end

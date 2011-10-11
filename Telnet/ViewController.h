@@ -10,13 +10,16 @@
 #import "TerminalIdentity.h"
 
 @class TelnetConnection;
-@class TerminalIdentity;
+@class Terminal;
+@class Parser;
 
 @interface ViewController : UIViewController <UITextViewDelegate, TerminalResponderDelegate> {
     
     UITextView *inputTextView;
+    
     TelnetConnection *connection;
-    TerminalIdentity *identity;
+    Terminal *terminal;
+    Parser *parser;
 }
 
 @end

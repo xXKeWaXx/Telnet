@@ -10,7 +10,7 @@
 
 @implementation TelnetConnection
 
-@synthesize identityDelegate = _identityDelegate;
+@synthesize parserDelegate;
 
 - (id)init {
     
@@ -52,8 +52,8 @@
     NSError *error;
     [socket connectToHost:hostName onPort:port error:&error];
 
-    NSData *display = [NSData dataWithBytes:kTelnetMsgConnecting length:strlen(kTelnetMsgConnecting)];
-    [_identityDelegate displayData:display];
+    NSData *message = [NSData dataWithBytes:kTelnetMsgConnecting length:strlen(kTelnetMsgConnecting)];
+    [parserDelegate parseData:message];
 }
 
 #define SEND_BUFSIZE (600)
@@ -292,8 +292,8 @@
 // incoming data
 - (void)socket:(GCDAsyncSocket *)sock didReadData:(NSData *)data withTag:(long)tag {
 
-    if(dataForDisplay == nil)
-        dataForDisplay = [[NSMutableData alloc] init];
+    if(networkData == nil)
+        networkData = [[NSMutableData alloc] init];
     if(dataForSubnegotiation == nil)
         dataForSubnegotiation = [[NSMutableData alloc] init];
     
@@ -316,7 +316,7 @@
                 else {
                     if (inSynch == NO) {
                         // normal data to pass through for display by terminal
-                        [dataForDisplay appendBytes:&c length:1];
+                        [networkData appendBytes:&c length:1];
                     }                    
 #if 1
                     /* I can't get the F***ing winsock to insert the urgent IAC
@@ -356,7 +356,7 @@
                 } else {
                     if (c == kTelnetCharIAC) {
                         // the case of IAC sent twice (escaped)
-                        [dataForDisplay appendBytes:&c length:1];
+                        [networkData appendBytes:&c length:1];
                     }
                     receiveState = kStateStart;
                 }
@@ -408,9 +408,9 @@
         }
     }
     
-    [(NSObject *)_identityDelegate performSelectorOnMainThread:@selector(displayData:) withObject:dataForDisplay waitUntilDone:YES];
+    [(NSObject *)parserDelegate performSelectorOnMainThread:@selector(parseData:) withObject:networkData waitUntilDone:YES];
     
-    dataForDisplay = nil;
+    networkData = nil;
 
     // look for more
     [sock readDataWithTimeout:-1 tag:readSequence++];

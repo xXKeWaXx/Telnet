@@ -48,6 +48,10 @@ typedef enum _TerminalResponseType {
 - (void)clearCursorBelow;
 
 // define and move terminal window
+- (void)setColumns:(int)cols;
+- (void)setMarginsTop:(int)topRow bottom:(int)bottomRow;
+- (void)setOriginMode:(BOOL)isOriginMode;
+
 - (void)terminalWindowSetRowStart:(int)rowStart rowEnd:(int)rowEnd;
 - (void)terminalWindowScrollUp;
 - (void)terminalWindowScrollDown;
@@ -78,7 +82,7 @@ typedef enum _TelnetDataState {
     
 } TelnetDataState;
 
-@interface TerminalIdentity : NSObject <TerminalIdentityDelegate> {
+@interface TerminalIdentity : NSObject /*<TerminalIdentityDelegate>*/ {
     
     id<TerminalDisplayDelegate>  __weak _displayDelegate;
     id<TerminalResponderDelegate> __weak _responderDelegate;

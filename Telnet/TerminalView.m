@@ -7,7 +7,7 @@
 //
 
 #import "TerminalView.h"
-#import "NoAALabel.h"
+//#import "NoAALabel.h"
 
 @implementation TerminalView
 
@@ -27,6 +27,7 @@
 /************************* terminal display private ***********************/
 
 // to avoid off-by-1 errors, array access is always done through these functions
+/*
 static inline int rowIndex(int rowNum) { return rowNum - 1; }
 static inline int colIndex(int colNum) { return colNum - 1; }
 
@@ -175,19 +176,25 @@ static inline int colIndex(int colNum) { return colNum - 1; }
 
 - (void)characterDisplay:(unsigned char)c {
 
+    if(c == ' ')
+        NSLog(@"Space at %d,%d", _terminalRow, _terminalColumn);
+    else 
+        NSLog(@"Char %c at %d,%d", c, _terminalRow, _terminalColumn);
+    
     // current cursor position
-    NoAALabel *cursorGlyph = [[terminalRows objectAtIndex:rowIndex(_terminalRow)] objectAtIndex:colIndex(_terminalColumn)];
+    NoAALabel *cursorGlyph = [[terminalRows objectAtIndex:rowIndex(_terminalRow)] 
+                              objectAtIndex:colIndex(_terminalColumn)];
     
     // transform character into alternate sets if required (e.g. codepage 437) TODO
     cursorGlyph.text = [NSString stringWithFormat:@"%c", c];
-    
-    // apply current styles to cursor TODO
 
-    if(_terminalColumn < kTerminalColumns) {
+    if(decawm == YES && _terminalColumn == kTerminalColumns) {
+        // graphic characters received when the cursor is at the right border 
+        // of the page appear at the beginning of the next line
+        [self advanceRow];
+        [self cursorSetRow:_terminalRow column:1];
+    } else if(_terminalColumn < kTerminalColumns) {
         [self cursorSetRow:_terminalRow column:_terminalColumn + 1];
-    } else if(_terminalColumn == kTerminalColumns && decawm == YES) {
-        // if position is last column and wrap enabled, wrap
-        [self cursorSetRow:_terminalRow + 1 column:1];
     }
 }
 
@@ -229,7 +236,7 @@ static inline int colIndex(int colNum) { return colNum - 1; }
         {
             if(_terminalColumn > 1) {
                 // erase glyph at previous position
-                NSArray *rowArray = [terminalRows objectAtIndex:rowIndex(_terminalRow)];
+//                NSArray *rowArray = [terminalRows objectAtIndex:rowIndex(_terminalRow)];
 //                NoAALabel *glyph;
 //                glyph = [rowArray objectAtIndex:colIndex(_terminalColumn - 1)];
 //                [self clearGlyph:glyph];
@@ -281,6 +288,15 @@ static inline int colIndex(int colNum) { return colNum - 1; }
 
     [self cursorOff];
     
+    // if in origin mode, restrict cursor to within the margins
+    if(originMode == YES) {
+        if(row < topMargin)
+            row = topMargin;
+        if(row > bottomMargin)
+            row = bottomMargin;
+    }
+    
+    // always restrict to within the window
     if(row > kTerminalRows)
         row = kTerminalRows;
     if(col > kTerminalColumns)
@@ -397,6 +413,45 @@ static inline int colIndex(int colNum) { return colNum - 1; }
 
 // TERMINAL STATE
 
+// set terminal width (implies clear)
+- (void)setColumns:(int)cols {
+    // 80-col only right now
+    [self clearAll];
+}
+
+- (void)setMarginsTop:(int)topRow bottom:(int)bottomRow {
+
+    if(topRow > bottomRow)
+        return;
+    
+    // set the top and bottom margins for the current page
+    if(topRow < 1)
+        topMargin = 1;
+    else if (topRow > kTerminalRows)
+        topMargin = kTerminalRows;
+    else
+        topMargin = topRow;
+
+    if(bottomRow < 1)
+        bottomMargin = 1;
+    else if (bottomRow > kTerminalRows)
+        bottomMargin = kTerminalRows;
+    else
+        bottomMargin = bottomRow;
+
+    
+}
+
+- (void)setOriginMode:(BOOL)isOriginMode {
+
+    originMode = isOriginMode;
+    
+    if(originMode == YES)
+        [self cursorSetRow:topMargin column:1];
+    else
+        [self cursorSetRow:1 column:1];
+}
+
 // set window area
 - (void)terminalWindowSetRowStart:(int)rowStart rowEnd:(int)rowEnd {
     
@@ -493,7 +548,7 @@ static inline int colIndex(int colNum) { return colNum - 1; }
     _terminalRow = _terminalColumn = 1;
     
     decawm = NO;
-    
+    originMode = NO;
     [self cursorOn];
 
 }
@@ -522,5 +577,5 @@ static inline int colIndex(int colNum) { return colNum - 1; }
 // set display hidden
 - (void)displaySetTextHidden:(BOOL)set {
 }
-
+*/
 @end

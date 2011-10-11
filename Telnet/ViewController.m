@@ -8,8 +8,12 @@
 
 #import "ViewController.h"
 #import "TelnetConnection.h"
-#import "TerminalView.h"
-#import "TerminalIdentity.h"
+#import "Display.h"
+#import "Parser.h"
+#import "Terminal.h"
+
+//#import "TerminalView.h"
+//#import "TerminalIdentity.h"
 
 @implementation ViewController
 
@@ -75,9 +79,34 @@
 {
     [super viewDidLoad];
 
+    Display *display = [[Display alloc] initWithFrame:CGRectZero];
+
+    terminal = [[Terminal alloc] init];
+    terminal.displayDelegate = display;
     
+    parser = [[Parser alloc] init];
+    parser.terminalDelegate = terminal;
+    
+    connection = [[TelnetConnection alloc] init];
+    connection.parserDelegate = parser;
+    [connection setOptions:nil];
+    
+    // set frame of display
+    CGFloat displayWidth = display.frame.size.width;
+    CGRect displayRect = display.frame;
+    displayRect.origin.x = (768 - displayWidth) / 2;
+    displayRect.origin.y = displayRect.origin.x;
+    display.frame = displayRect;
+    [self.view addSubview:display];
+
+    inputTextView = [[UITextView alloc] initWithFrame:CGRectMake(displayRect.origin.x, displayRect.origin.y + displayRect.size.height + 10, displayRect.size.width, 18.f)];
+    inputTextView.delegate = self;
+    [self.view addSubview:inputTextView];
+    [inputTextView becomeFirstResponder];
+
     // terminal view is the class that displays terminal interaction.
     // It implements TerminalDisplayDelegate
+/*
     TerminalView *terminalView = [[TerminalView alloc] initWithFrame:CGRectZero];
     [self.view addSubview:terminalView];
     CGFloat termWidth = terminalView.frame.size.width;
@@ -99,9 +128,9 @@
     
     // connection object manages the actual connection through GCDAsyncSocket
     connection = [[TelnetConnection alloc] init];
-    connection.identityDelegate = identity;
+    connection.parserDelegate = identity;
     [connection setOptions:nil];
-    
+*/    
         // enable telnet
         // sudo sh-3.2# launchctl
         // launchd% load -F /System/Library/LaunchDaemons/telnet.plist
