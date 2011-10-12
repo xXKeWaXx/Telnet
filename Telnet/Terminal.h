@@ -8,20 +8,13 @@
 
 #import <Foundation/Foundation.h>
 #import "Parser.h"
-
-typedef uint16_t glyphAttributes;
-
-@protocol DisplayDelegate <NSObject>
-- (void)resetScreenWithRows:(int)rows andColumns:(int)cols;
-- (void)displayChar:(uint8_t)c 
-              atRow:(int)row 
-           atColumn:(int)col 
-     withAttributes:(glyphAttributes)attributes;
-@end
+#import "DisplayDelegate.h"
+#import "ConnectionDelegate.h"
 
 @interface Terminal : NSObject <TerminalDelegate> {
     
     id<DisplayDelegate> __weak displayDelegate;
+    id<ConnectionDelegate> __weak connectionDelegate;
     
     int termRow;
     int termCol;
@@ -34,5 +27,6 @@ typedef uint16_t glyphAttributes;
 }
 
 @property id<DisplayDelegate> __weak displayDelegate;
+@property id<ConnectionDelegate> __weak connectionDelegate;
 
 @end

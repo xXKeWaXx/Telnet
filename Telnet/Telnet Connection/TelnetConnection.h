@@ -12,16 +12,12 @@
 #import "GCDAsyncSocket.h"
 #import "TelnetOptionHandler.h"
 #import "TelnetConstants.h"
-
-@protocol ParserDelegate <NSObject>
-- (void)parseData:(NSData *)data;
-- (void)connectionMade;
-@end
+#import "Terminal.h"
 
 // The TelnetConnection object handles the management of the telnet session including the interpretation of
 // commands and negotiation of options. A delegate, terminalDelegate, is defined for output of display to the user.
 
-@interface TelnetConnection : NSObject <GCDAsyncSocketDelegate> {
+@interface TelnetConnection : NSObject <ConnectionDelegate, GCDAsyncSocketDelegate> {
 
     id<ParserDelegate> __weak parserDelegate;
     

@@ -75,6 +75,9 @@
 		66AE056A13FFE4B200DF9D41 /* Glyph.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Glyph.h; sourceTree = "<group>"; };
 		66AE056B13FFE4B200DF9D41 /* Glyph.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Glyph.m; sourceTree = "<group>"; };
 		66AE056D13FFE51200DF9D41 /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
+		66EE96121446239A00427522 /* ParserDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ParserDelegate.h; sourceTree = "<group>"; };
+		66EE96141446240A00427522 /* DisplayDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DisplayDelegate.h; sourceTree = "<group>"; };
+		66EE96151446244800427522 /* ConnectionDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ConnectionDelegate.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -182,6 +185,8 @@
 				663E6FD114446066007ECA01 /* Parser.h */,
 				663E6FD214446066007ECA01 /* Parser.m */,
 				663E6FCE1444604E007ECA01 /* Terminal.h */,
+				66EE96151446244800427522 /* ConnectionDelegate.h */,
+				66EE96141446240A00427522 /* DisplayDelegate.h */,
 				663E6FCF1444604F007ECA01 /* Terminal.m */,
 				66AE055A13FFC60100DF9D41 /* TelnetConnection.h */,
 				66AE055B13FFC60100DF9D41 /* TelnetConnection.m */,
@@ -192,6 +197,7 @@
 				660A7D3F141B80BF003C0010 /* TerminalIdentity.h */,
 				660A7D40141B80BF003C0010 /* TerminalIdentity.m */,
 				660A7D42141B82EE003C0010 /* TerminalConstants.h */,
+				66EE96121446239A00427522 /* ParserDelegate.h */,
 			);
 			name = Terminal;
 			sourceTree = "<group>";

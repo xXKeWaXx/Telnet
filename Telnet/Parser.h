@@ -7,7 +7,8 @@
 //
 
 #import <Foundation/Foundation.h>
-#import "TelnetConnection.h"
+//#import "TelnetConnection.h"
+#import "ParserDelegate.h"
 
 @protocol TerminalDelegate <NSObject>
 - (void)characterDisplay:(unsigned char)c;

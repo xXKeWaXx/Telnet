@@ -23,41 +23,41 @@
     // Release any cached data, images, etc that aren't in use.
 }
 
-#pragma - mark TerminalResponderDelegate
-
-- (void)sendResponse:(TerminalResponseType)response {
-    
-    uint8_t esc = 0x1b;
-    uint8_t csi = '[';
-    uint8_t question = '?';
-    uint8_t semi = ';';
-    uint8_t numeric;
-    
-    NSMutableData *responseData = [NSMutableData data];
-    [responseData appendBytes:&esc length:1];
-    
-    switch(response) {
-        case kResponseTerminalIdentity:
-            [responseData appendBytes:&csi length:1];
-            [responseData appendBytes:&question length:1];
-            numeric = '1';
-            [responseData appendBytes:&numeric length:1];
-            [responseData appendBytes:&semi length:1];
-            numeric = '0';
-            [responseData appendBytes:&numeric length:1];
-            numeric = 'c';
-            [responseData appendBytes:&numeric length:1];
-            
-            break;
-        default:
-            NSLog(@"TerminalIdentity requested strange response to host");
-            break;
-    }
-    
-    [connection sendData:responseData];
-}
-
-
+//#pragma - mark TerminalResponderDelegate
+//
+//- (void)sendResponse:(TerminalResponseType)response {
+//    
+//    uint8_t esc = 0x1b;
+//    uint8_t csi = '[';
+//    uint8_t question = '?';
+//    uint8_t semi = ';';
+//    uint8_t numeric;
+//    
+//    NSMutableData *responseData = [NSMutableData data];
+//    [responseData appendBytes:&esc length:1];
+//    
+//    switch(response) {
+//        case kResponseTerminalIdentity:
+//            [responseData appendBytes:&csi length:1];
+//            [responseData appendBytes:&question length:1];
+//            numeric = '1';
+//            [responseData appendBytes:&numeric length:1];
+//            [responseData appendBytes:&semi length:1];
+//            numeric = '0';
+//            [responseData appendBytes:&numeric length:1];
+//            numeric = 'c';
+//            [responseData appendBytes:&numeric length:1];
+//            
+//            break;
+//        default:
+//            NSLog(@"TerminalIdentity requested strange response to host");
+//            break;
+//    }
+//    
+//    [connection sendData:responseData];
+//}
+//
+//
 #pragma - mark UITextViewDelegate
 - (BOOL)textViewShouldEndEditing:(UITextView *)textView {
     return NO;
@@ -73,12 +73,25 @@
 }
 // UITextViewDelegate ends
 
+- (void)keyPressed:(NSNotification*)notification {
+ 
+    NSLog(@"%@", [notification name]);
+//    NSLog(@"%@", [notification object]);
+//    NSLog(@"%@", [notification userInfo]);
+}
+          
 #pragma mark - View lifecycle
 
 - (void)viewDidLoad
 {
     [super viewDidLoad];
 
+    [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(keyPressed:) name:UITextInputCurrentInputModeDidChangeNotification object: nil];
+    
+
+//    [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(keyPressed:) name: UITextFieldTextDidChangeNotification object: nil];
+//    [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(keyPressed:) name: UITextViewTextDidChangeNotification object: nil];
+    
     CGSize displaySize = [Display sizeForRows:24 andColumns:80];
     CGFloat displayOrigin = (768 - displaySize.width) / 2;
     Display *display = [[Display alloc] initWithFrame:CGRectMake(displayOrigin,
@@ -88,17 +101,17 @@
     [self.view addSubview:display];
 
 
-    terminal = [[Terminal alloc] init];
-    terminal.displayDelegate = display;
-    
-    parser = [[Parser alloc] init];
-    parser.terminalDelegate = terminal;
-    
     connection = [[TelnetConnection alloc] init];
-    connection.parserDelegate = parser;
     [connection setOptions:nil];
+    terminal = [[Terminal alloc] init];
+    parser = [[Parser alloc] init];
     
+    parser.terminalDelegate = terminal;
+    connection.parserDelegate = parser;
+    terminal.displayDelegate = display;
+    terminal.connectionDelegate = connection;
 
+    
     inputTextView = [[UITextView alloc] initWithFrame:CGRectMake(displayOrigin, 
                                                                  displayOrigin + displaySize.height + 10, 
                                                                  displaySize.width, 
