@@ -10,7 +10,20 @@
 
 @implementation Terminal
 
+#define kTerminalRows (24)
+#define kTerminalColumns (80)
+
 @synthesize displayDelegate;
+
+- (id)init {
+
+    self = [super init];
+    if(self != nil) {
+        terminalRows = kTerminalRows;
+        terminalColumns = kTerminalColumns;
+    }
+    return self;
+}
 
 - (void)logCommand:(NSMutableData *)data {
     
@@ -30,23 +43,50 @@
 }
 
 #pragma mark -
+#pragma mark Management of cursor
+
+- (void)setRow:(int)row andColumn:(int)col {
+    termRow = row;
+    termCol = col;
+}
+
+- (void)advanceColumn {
+
+    if(0) {
+        // wrap enabled
+    } else {
+        if(termCol < kTerminalColumns)
+            [self setRow:termRow andColumn:termCol + 1];
+    }
+}
+
+// check for origin mode, handle scrolling, in simple cases just increment termRow
+- (void)advanceRow {
+
+    if(termRow < kTerminalRows)
+        [self setRow:termRow + 1 andColumn:termCol];
+}
+
+#pragma mark -
 #pragma mark TerminalDelegate
 
 - (void)characterDisplay:(unsigned char)c {
-    NSLog(@"display %c", c);
+
+    [displayDelegate displayChar:c atRow:termRow atColumn:termCol withAttributes:0];
+    [self advanceColumn];
 }
 
 - (void)characterNonDisplay:(unsigned char)c {
     switch(c) {
         case kTelnetCharCR:
-            NSLog(@"CR");
+            [self setRow:termRow andColumn:1];
             break;
         case kTelnetCharFF:
         case kTelnetCharVT:
-            NSLog(@"FF/VT");
+            [self advanceRow];
             break;
         case kTelnetCharLF:
-            NSLog(@"LF");
+            [self advanceRow];
             break;
         case kTelnetCharHT:            
             NSLog(@"HT");
@@ -64,8 +104,28 @@
     }
 }
 
+// interpret the 
 - (void)processCommand:(NSData *)command {
     [self logCommand:command];
+}
+
+// reset everything for a new connection
+- (void)reset {
+    
+    termRow = termCol = 1;
+    
+    // tab stops are initially every 8 characters beginning in the first column
+    int tabStop = 1;
+    tabStops = [[NSMutableArray alloc] init];
+    do {
+        
+        [tabStops addObject:[NSNumber numberWithInt:tabStop]];
+        tabStop += 8;
+        
+    }while(tabStop < kTerminalColumns);
+
+    // cause glyphs to be created and laid out for the display
+    [displayDelegate resetScreenWithRows:terminalRows andColumns:terminalColumns];
 }
 
 @end

@@ -51,9 +51,6 @@
     
     NSError *error;
     [socket connectToHost:hostName onPort:port error:&error];
-
-    NSData *message = [NSData dataWithBytes:kTelnetMsgConnecting length:strlen(kTelnetMsgConnecting)];
-    [parserDelegate parseData:message];
 }
 
 #define SEND_BUFSIZE (600)
@@ -285,7 +282,10 @@
 
 // connection succeeded
 - (void)socket:(GCDAsyncSocket *)sock didConnectToHost:(NSString *)host port:(UInt16)port {
-    
+
+    [(NSObject *)parserDelegate performSelectorOnMainThread:@selector(connectionMade) 
+                                                 withObject:nil waitUntilDone:YES];
+
     [sock readDataWithTimeout:-1 tag:readSequence++];
 }
 

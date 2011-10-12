@@ -16,7 +16,6 @@
     
 }
 
-- (void)displayChar:(uint8_t)c atRow:(int)row atColumn:(int)col;
-- (void)resetScreenWithRows:(int)rows andColumns:(int)cols;
++ (CGSize)sizeForRows:(int)rows andColumns:(int)cols;
 
 @end

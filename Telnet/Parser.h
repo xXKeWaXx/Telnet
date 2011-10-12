@@ -13,6 +13,8 @@
 - (void)characterDisplay:(unsigned char)c;
 - (void)characterNonDisplay:(unsigned char)c;
 - (void)processCommand:(NSData *)command;
+- (void)reset;
+
 @end
 
 @interface Parser : NSObject <ParserDelegate> {

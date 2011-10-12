@@ -57,6 +57,12 @@ typedef enum _TerminalDataState {
                         waitUntilDone:YES];
 }
 
+// new connection, reset everything
+- (void)connectionMade {
+    [terminalDelegate reset];
+}
+
+
 #pragma mark -
 #pragma mark Parser
 
@@ -100,7 +106,7 @@ typedef enum _TerminalDataState {
     unsigned char *c = (unsigned char *)[incomingData bytes];
     int len = [incomingData length];
     
-    static TerminalDataState state = kStateGround;
+    TerminalDataState state = kStateGround;
     TerminalDataState transitionState;
     NSMutableData *param = [NSMutableData data];
     

@@ -15,6 +15,7 @@
 
 @protocol ParserDelegate <NSObject>
 - (void)parseData:(NSData *)data;
+- (void)connectionMade;
 @end
 
 // The TelnetConnection object handles the management of the telnet session including the interpretation of

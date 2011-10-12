@@ -79,7 +79,14 @@
 {
     [super viewDidLoad];
 
-    Display *display = [[Display alloc] initWithFrame:CGRectZero];
+    CGSize displaySize = [Display sizeForRows:24 andColumns:80];
+    CGFloat displayOrigin = (768 - displaySize.width) / 2;
+    Display *display = [[Display alloc] initWithFrame:CGRectMake(displayOrigin,
+                                                                 displayOrigin,
+                                                                 displaySize.width,
+                                                                 displaySize.height)];
+    [self.view addSubview:display];
+
 
     terminal = [[Terminal alloc] init];
     terminal.displayDelegate = display;
@@ -91,15 +98,11 @@
     connection.parserDelegate = parser;
     [connection setOptions:nil];
     
-    // set frame of display
-    CGFloat displayWidth = display.frame.size.width;
-    CGRect displayRect = display.frame;
-    displayRect.origin.x = (768 - displayWidth) / 2;
-    displayRect.origin.y = displayRect.origin.x;
-    display.frame = displayRect;
-    [self.view addSubview:display];
 
-    inputTextView = [[UITextView alloc] initWithFrame:CGRectMake(displayRect.origin.x, displayRect.origin.y + displayRect.size.height + 10, displayRect.size.width, 18.f)];
+    inputTextView = [[UITextView alloc] initWithFrame:CGRectMake(displayOrigin, 
+                                                                 displayOrigin + displaySize.height + 10, 
+                                                                 displaySize.width, 
+                                                                 18.f)];
     inputTextView.delegate = self;
     [self.view addSubview:inputTextView];
     [inputTextView becomeFirstResponder];
