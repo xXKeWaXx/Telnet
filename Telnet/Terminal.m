@@ -52,21 +52,45 @@
     termCol = col;
 }
 
+- (void)decrementColumn {
+
+    if(0) {
+        // if reverse wrap
+    } else {
+        if(termCol > 1)
+            [self setRow:termRow andColumn:termCol - 1];
+    }
+}
+
 - (void)advanceColumn {
 
     if(0) {
         // wrap enabled
     } else {
-        if(termCol < kTerminalColumns)
+        if(termCol < terminalColumns)
             [self setRow:termRow andColumn:termCol + 1];
+    }
+}
+
+- (void)decrementRow {
+
+    if(termRow > 1) {
+        termRow--;
+    } else {
+        // reverse scroll (down)
+        NSLog(@"Can't reverse scroll yet!");
     }
 }
 
 // check for origin mode, handle scrolling, in simple cases just increment termRow
 - (void)advanceRow {
 
-    if(termRow < kTerminalRows)
+    if(termRow == terminalRows) {
+        // cursor is on the last available row, cause display to scroll up - row, col do not change
+        [displayDelegate scrollUp];
+    } else {
         [self setRow:termRow + 1 andColumn:termCol];
+    }
 }
 
 // reset everything for a new connection
@@ -82,7 +106,7 @@
         [tabStops addObject:[NSNumber numberWithInt:tabStop]];
         tabStop += 8;
         
-    }while(tabStop < kTerminalColumns);
+    }while(tabStop < terminalColumns);
     
     // cause glyphs to be created and laid out for the display
     [displayDelegate resetScreenWithRows:terminalRows andColumns:terminalColumns];
@@ -258,34 +282,36 @@
             
             if(*bytes == '?') {
                 switch(*(bytes + 1)) {
-/*                        
+                       
                     case 1:
                         // Send: <27> [ ? 1 1 → Normal Cursor Keys (DECCKM). 
-                        NSLog(@"Normal Cursor Keys (DECCKM)");
+                        NSLog(@"Normal Cursor Keys (DECCKM), should send ANSI sequences");
                         break;
                     case 3:
                         // Send: <27> [ ? 3 l 80 Column Mode (DECCOLM). 
-                        [_displayDelegate setColumns:80];
+                        [displayDelegate setColumns:80];
                         break;
                     case 4:
                         // Send: <27> [ ? 4 l Jump (Fast) Scroll (DECSCLM).
-                        NSLog(@"Jump (Fast) Scroll (DECSCLM)");
+                        NSLog(@"Jump (Fast) Scroll (DECSCLM) (smooth scroll not implemented yet)");
                         break;
                     case 5:
                         // Send: <27> [ ? 5 l Normal Video (DECSCNM).  
-                        NSLog(@"Normal Video (DECSCNM)");
+                        NSLog(@"Normal Video (DECSCNM) (inverse video mode not implemented yet)");
                         break;
                     case 6:
                         // Send: <27> [ ? 6 l Normal Cursor Mode (DECOM). 
-                        [_displayDelegate setOriginMode:NO];
+                        NSLog(@"Normal Cursor Mode (DECOM) (use whole screen, origin mode not implemented yet");
+                        //[_displayDelegate setOriginMode:NO];
                         break;
                     case 7:
                         // Send: <27> [ ? 7 h No Wraparound Mode (DECAWM). 
-                        [_displayDelegate setAutoWrapMode:NO];
+                        NSLog(@"No Wraparound Mode (DECAWM)");
+                        //[_displayDelegate setAutoWrapMode:NO];
                         break;
                     case 8:
                         // Send: <27> [ ? 8 l No Auto-repeat Keys (DECARM). 
-                        NSLog(@"No Auto-repeat Keys (DECARM)");
+                        NSLog(@"No Auto-repeat Keys (DECARM) (not implemented yet)");
                         break;
                     case 40:
                         // Send: <27> [ ? 4 0 h Disallow 80 → 132 Mode. 
@@ -293,9 +319,9 @@
                         break;
                     case 45:
                         // Send: <27> [ ? 4 5 l No Reverse-wraparound Mode. 
-                        NSLog(@"No Reverse-wraparound Mode");
+                        NSLog(@"No Reverse-wraparound Mode (not implemented yet)");
                         break;
-*/ 
+
                     default:
                         NSLog(@"?l unhandled");
                         break;
@@ -357,8 +383,7 @@
                 count = 1;
             
             while(count--)
-                ;
-//                [_displayDelegate cursorUp];
+                [self decrementRow];
         }
             break;
         case 'B': // CUD cursor down
@@ -371,8 +396,7 @@
                 count = 1;
             
             while(count--)
-                ;
-//                [_displayDelegate cursorDown];
+                [self advanceRow];
         }
             break;
         case 'C': // CUF cursor forward
@@ -385,8 +409,7 @@
                 count = 1;
             
             while(count--)
-                ;
-//                [_displayDelegate cursorRight];
+                [self advanceColumn];
         }
             break;
         case 'D': // CUB cursor backward
@@ -399,8 +422,7 @@
                 count = 1;
             
             while(count--)
-                ;
-//                [_displayDelegate cursorLeft];
+                [self decrementColumn];
         }
             break;
         case 'J': // ED erase in dsplay
@@ -428,32 +450,80 @@
         case 'H':
         case 'f': // HVP horizontal and vertical position
         {
-            int rowPosition = 1;
-            int columnPosition = 1;
-            
             if(len == 0) {
                 // home command
-                rowPosition = 1;
-                columnPosition = 1;
+                termRow = 1;
+                termCol = 1;
             } else {
                 arguments = [self parseNumerics:sequence length:len];
                 unsigned char *bytes = [arguments mutableBytes];
-                rowPosition = *bytes;
-                columnPosition = *(bytes + 1);
+                termRow = *bytes;
+                termCol = *(bytes + 1);
                 
-                if(rowPosition == COMMAND_DEFAULT_VALUE)
-                    rowPosition = 1;
-                if(columnPosition == COMMAND_DEFAULT_VALUE)
-                    columnPosition = 1;
+                if(termRow == COMMAND_DEFAULT_VALUE)
+                    termRow = 1;
+                if(termCol == COMMAND_DEFAULT_VALUE)
+                    termCol = 1;
             }
-//            [_displayDelegate cursorSetRow:rowPosition column:columnPosition];
-            
         }
             break;
         default:
             NSLog(@"Unhandled ANSI command sequence finalChar %c", finalChar);
     }
     
+}
+
+- (void)processDECCommandSequence:(unsigned char *)sequence withLength:(int)len {
+    
+    NSMutableString *commandString = [NSMutableString string];
+    
+    for(int i = 1; i < len + 1; i++) {
+        [commandString appendFormat:@"%c", *(sequence + (len - i))];
+    }
+    
+    unsigned char finalChar = *sequence;
+    // finalChar is the first char, advance unless it is also last
+    if(len > 0) {
+        len--; 
+        sequence++;
+    }
+    
+    switch(finalChar) {
+        case '8': {
+            if(len == 0) {
+                // restore cursor previously saved attributes
+                NSLog(@"unhandled");
+            } else if ((len == 1) && (*sequence == '#')) {
+                // test mode; fill screen with 'E' chars (DECALN)
+                for(int i = 1; i <= terminalRows; i++) {
+                    termRow = i;
+                    termCol = 1;
+                    for(int j = 1; j < terminalColumns; j++) {
+                        [self characterDisplay:'E'];
+                    }
+                }
+            }
+        }
+            break;
+            
+        case 'D': { // IND cursor index
+            [self advanceRow];
+            
+        }
+            break;
+        case 'E': { // NEL first position on next line
+            [self advanceRow];
+            termCol = 1;
+        }
+            break;
+        case 'M': { // RI
+            [self decrementRow];
+        }
+            break;
+        default:
+            NSLog(@"Unhandled DEC command sequence %c", finalChar);
+            break;
+    }
 }
 
 
@@ -490,12 +560,13 @@
                 }
             }
             if(tab == 0)
-                tab = kTerminalColumns;
+                tab = terminalColumns;
             [self setRow:termRow andColumn:tab];
         }
             break;
         case kTelnetCharBS:            
-            NSLog(@"BS");
+            // move the cursor back
+            [self decrementColumn];
             break;
         case kTelnetCharBEL:
             NSLog(@"ding!");
@@ -536,8 +607,7 @@
     if(isANSI == YES) {
         [self processANSICommandSequence:[reversedCommand mutableBytes] withLength:[reversedCommand length]];
     } else {
-        ;
-//        [self processDECCommandSequence:[reversedCommand mutableBytes] withLength:[reversedCommand length]];
+        [self processDECCommandSequence:[reversedCommand mutableBytes] withLength:[reversedCommand length]];
     }
 }
 

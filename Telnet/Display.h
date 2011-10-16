@@ -8,12 +8,15 @@
 
 #import <UIKit/UIKit.h>
 #import "Terminal.h"
+#import "Glyph.h"
 
 @interface Display : UIView <DisplayDelegate> {
 
     // array of arrays containing glyphs; screen memory
     NSMutableArray *terminalRows;
     
+    GlyphColor backgroundColor;
+    GlyphColor foregroundColor;
 }
 
 + (CGSize)sizeForRows:(int)rows andColumns:(int)cols;

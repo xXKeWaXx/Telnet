@@ -23,41 +23,6 @@
     // Release any cached data, images, etc that aren't in use.
 }
 
-//#pragma - mark TerminalResponderDelegate
-//
-//- (void)sendResponse:(TerminalResponseType)response {
-//    
-//    uint8_t esc = 0x1b;
-//    uint8_t csi = '[';
-//    uint8_t question = '?';
-//    uint8_t semi = ';';
-//    uint8_t numeric;
-//    
-//    NSMutableData *responseData = [NSMutableData data];
-//    [responseData appendBytes:&esc length:1];
-//    
-//    switch(response) {
-//        case kResponseTerminalIdentity:
-//            [responseData appendBytes:&csi length:1];
-//            [responseData appendBytes:&question length:1];
-//            numeric = '1';
-//            [responseData appendBytes:&numeric length:1];
-//            [responseData appendBytes:&semi length:1];
-//            numeric = '0';
-//            [responseData appendBytes:&numeric length:1];
-//            numeric = 'c';
-//            [responseData appendBytes:&numeric length:1];
-//            
-//            break;
-//        default:
-//            NSLog(@"TerminalIdentity requested strange response to host");
-//            break;
-//    }
-//    
-//    [connection sendData:responseData];
-//}
-//
-//
 #pragma - mark UITextViewDelegate
 - (BOOL)textViewShouldEndEditing:(UITextView *)textView {
     return NO;
@@ -65,11 +30,16 @@
 
 - (void)textViewDidChange:(UITextView *)textView {
 
-    // textView doesn't send any control chars such as ESC, CTRL-C - some manual handling required
- //   [identity displayData:[NSData dataWithBytes:[textView.text cStringUsingEncoding:NSASCIIStringEncoding] length:[textView.text length]]];
-    
-    [connection sendString:textView.text];
-    textView.text = nil;
+    // determine whether the key was a backspace
+    if([textView.text isEqualToString:@""]) {
+        uint8_t bsValue = kTelnetCharBS;
+        [connection sendData:[NSData dataWithBytes:&bsValue length:1]];
+    } else {
+        // Not a backspace, send all but the 'X'
+        NSRange allButX = NSMakeRange(1, 1);
+        [connection sendString:[textView.text substringWithRange:allButX]];
+    }
+    textView.text = @"X";
 }
 // UITextViewDelegate ends
 
@@ -116,6 +86,7 @@
                                                                  displayOrigin + displaySize.height + 10, 
                                                                  displaySize.width, 
                                                                  18.f)];
+    inputTextView.text = @"X";
     inputTextView.delegate = self;
     [self.view addSubview:inputTextView];
     [inputTextView becomeFirstResponder];

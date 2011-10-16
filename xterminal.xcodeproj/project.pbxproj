@@ -178,6 +178,7 @@
 			isa = PBXGroup;
 			children = (
 				663E6FC814445C85007ECA01 /* Objects.rtf */,
+				66EE96141446240A00427522 /* DisplayDelegate.h */,
 				663E6FCB14445DB0007ECA01 /* Display.h */,
 				663E6FCC14445DB0007ECA01 /* Display.m */,
 				66AE056A13FFE4B200DF9D41 /* Glyph.h */,
@@ -185,9 +186,8 @@
 				663E6FD114446066007ECA01 /* Parser.h */,
 				663E6FD214446066007ECA01 /* Parser.m */,
 				663E6FCE1444604E007ECA01 /* Terminal.h */,
-				66EE96151446244800427522 /* ConnectionDelegate.h */,
-				66EE96141446240A00427522 /* DisplayDelegate.h */,
 				663E6FCF1444604F007ECA01 /* Terminal.m */,
+				66EE96151446244800427522 /* ConnectionDelegate.h */,
 				66AE055A13FFC60100DF9D41 /* TelnetConnection.h */,
 				66AE055B13FFC60100DF9D41 /* TelnetConnection.m */,
 				66510FE9140BB1AE00DE90F7 /* TelnetConstants.h */,

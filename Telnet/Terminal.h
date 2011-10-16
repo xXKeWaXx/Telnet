@@ -16,11 +16,14 @@
     id<DisplayDelegate> __weak displayDelegate;
     id<ConnectionDelegate> __weak connectionDelegate;
     
+    // current position of cursor
     int termRow;
     int termCol;
 
+    // array of tabstop column value for cursor positioning
     NSMutableArray *tabStops;
     
+    // record of the rows and columns currently used by this terminal
     int terminalColumns;
     int terminalRows;
     

@@ -30,6 +30,9 @@ static inline int colIndex(int colNum) { return colNum - 1; }
     CGFloat yPos = 0.f;
     int i, j;
     
+    backgroundColor = kGlyphColorBlack;
+    foregroundColor = kGlyphColorGreen;
+    
     // terminal rows are numbered from 1..kTerminalRows
     for(i = 1; i <= rows; i++) {
         
@@ -41,7 +44,9 @@ static inline int colIndex(int colNum) { return colNum - 1; }
             Glyph *glyph = [[Glyph alloc] initWithFrame:CGRectMake(xPos, yPos, kGlyphWidth, kGlyphHeight)];
             glyph.font = [UIFont fontWithName:@"Courier New" size:kGlyphFontSize];
             glyph.text = nil;
-            glyph.backgroundColor = [UIColor blackColor];
+            glyph.textColor = [Glyph UIColorWithGlyphColor:foregroundColor];
+            glyph.backgroundColor = [Glyph UIColorWithGlyphColor:backgroundColor];
+            
             [terminalArray addObject:glyph];
             [self addSubview:glyph];
             xPos += kGlyphWidth;
@@ -57,6 +62,23 @@ static inline int colIndex(int colNum) { return colNum - 1; }
     self.frame = selfFrame;
 }
 
+- (void)clearDisplay {
+    
+    for(NSArray *row in terminalRows) {
+        for(Glyph *glyph in row) {
+            [glyph eraseWithBG:backgroundColor];
+        }
+    }
+}
+
+// set terminal width (implies clear)
+- (void)setColumns:(int)cols {
+
+    // 80-col only right now but this could cause a complete redraw
+    
+    [self clearDisplay];
+}
+
 - (void)displayChar:(uint8_t)c 
               atRow:(int)row 
            atColumn:(int)col 
@@ -66,10 +88,41 @@ static inline int colIndex(int colNum) { return colNum - 1; }
                               objectAtIndex:colIndex(col)];
     
     // check attributes, set display
-    glyph.textColor = [UIColor whiteColor];
-    glyph.backgroundColor = [UIColor blackColor];
 
     glyph.text = [NSString stringWithFormat:@"%c", c];
 
 }
+
+// save the outgoing roll to the scrollback buffer, move top row to bottom (reuse) and move all glyphs up
+- (void)scrollUp {
+    
+    int rowCount = [terminalRows count];
+    NSMutableArray *topLine = [terminalRows objectAtIndex:0];
+    [terminalRows removeObjectAtIndex:0];
+    
+    // save text from topLine in the scroll buffer
+    
+    // alter top line to become bottom line, text is cleared and frame.origin.y set
+    CGRect glyphFrame;
+    CGFloat rowYOrigin = kGlyphHeight * (rowCount - 1);
+    for(Glyph* glyph in topLine) {
+        glyph.text = nil;
+        glyphFrame = glyph.frame;
+        glyphFrame.origin.y = rowYOrigin;
+        glyph.frame = glyphFrame;
+    }
+    // alter frame of all other lines so that they move up one line
+    rowYOrigin = 0.f;
+    for(NSMutableArray *array in terminalRows) {
+        for(UILabel* glyph in array) {
+            glyphFrame = glyph.frame;
+            glyphFrame.origin.y = rowYOrigin;
+            glyph.frame = glyphFrame;
+        }
+        rowYOrigin += kGlyphHeight;
+    }
+    // add the bottom line
+    [terminalRows addObject:topLine];
+}
+
 @end

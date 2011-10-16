@@ -29,7 +29,7 @@ typedef enum _color {
     kGlyphColorBlue,
     kGlyphColorMagenta,
     kGlyphColorCyan,
-    kGlyphColorWhite
+    kGlyphColorGray
     
 } GlyphColor;
 
@@ -42,6 +42,16 @@ typedef enum _color {
     
 }
 
-- (void)erase;
+- (void)eraseWithBG:(GlyphColor)background;
+
++ (UIColor *)termBlackColor;
++ (UIColor *)termRedColor;
++ (UIColor *)termGreenColor;
++ (UIColor *)termYellowColor;
++ (UIColor *)termBlueColor;
++ (UIColor *)termMagentaColor;
++ (UIColor *)termCyanColor;
++ (UIColor *)termGrayColor;
++ (UIColor *)UIColorWithGlyphColor:(GlyphColor)glyphColor;
 
 @end
