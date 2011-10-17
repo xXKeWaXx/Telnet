@@ -44,8 +44,8 @@ static inline int colIndex(int colNum) { return colNum - 1; }
             Glyph *glyph = [[Glyph alloc] initWithFrame:CGRectMake(xPos, yPos, kGlyphWidth, kGlyphHeight)];
             glyph.font = [UIFont fontWithName:@"Courier New" size:kGlyphFontSize];
             glyph.text = nil;
-            glyph.textColor = [Glyph UIColorWithGlyphColor:foregroundColor];
-            glyph.backgroundColor = [Glyph UIColorWithGlyphColor:backgroundColor];
+            glyph.textColor = [Glyph UIColorWithGlyphColor:foregroundColor intensity:NO];
+            glyph.backgroundColor = [Glyph UIColorWithGlyphColor:backgroundColor intensity:NO];
             
             [terminalArray addObject:glyph];
             [self addSubview:glyph];
@@ -83,6 +83,9 @@ static inline int colIndex(int colNum) { return colNum - 1; }
               atRow:(int)row 
            atColumn:(int)col 
      withAttributes:(glyphAttributes)attributes {
+    
+    if((row > 24) || (col > 80))
+        return;
     
     Glyph *glyph = [[terminalRows objectAtIndex:rowIndex(row)] 
                               objectAtIndex:colIndex(col)];

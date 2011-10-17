@@ -48,37 +48,23 @@
 #pragma mark Management of cursor
 
 - (void)setRow:(int)row andColumn:(int)col {
+    if(row > terminalRows)
+        row = terminalRows;
+    if(row > terminalColumns)
+        row = terminalColumns;
+    
     termRow = row;
     termCol = col;
-}
-
-- (void)decrementColumn {
-
-    if(0) {
-        // if reverse wrap
-    } else {
-        if(termCol > 1)
-            [self setRow:termRow andColumn:termCol - 1];
-    }
-}
-
-- (void)advanceColumn {
-
-    if(0) {
-        // wrap enabled
-    } else {
-        if(termCol < terminalColumns)
-            [self setRow:termRow andColumn:termCol + 1];
-    }
+    NSLog(@"Cursor moved to %d,%d", termRow, termCol);
 }
 
 - (void)decrementRow {
 
     if(termRow > 1) {
-        termRow--;
+        [self setRow:termRow - 1 andColumn:termCol];
     } else {
         // reverse scroll (down)
-        NSLog(@"Can't reverse scroll yet!");
+        NSLog(@"Would scroll screen down but not implemented");
     }
 }
 
@@ -88,15 +74,39 @@
     if(termRow == terminalRows) {
         // cursor is on the last available row, cause display to scroll up - row, col do not change
         [displayDelegate scrollUp];
+        [self setRow:termRow andColumn:termCol];
     } else {
         [self setRow:termRow + 1 andColumn:termCol];
     }
 }
 
+- (void)decrementColumn {
+        
+    if((termCol == 1) && (modeDECRAWM == YES)) {
+        [self setRow:termRow andColumn:terminalColumns];
+        [self decrementRow];
+    } else {
+        if(termCol > 1)
+            [self setRow:termRow andColumn:termCol - 1];
+    }
+}
+
+- (void)advanceColumn {
+    
+    if((modeDECAWM == YES) && (termCol == terminalColumns)) {
+        [self advanceRow];
+        [self setRow:termRow andColumn:1];
+    } else {
+        if(termCol < terminalColumns)
+            [self setRow:termRow andColumn:termCol + 1];;
+    }
+}
+
+
 // reset everything for a new connection
 - (void)reset {
     
-    termRow = termCol = 1;
+    [self setRow:1 andColumn:1];
     
     // tab stops are initially every 8 characters beginning in the first column
     int tabStop = 1;
@@ -108,8 +118,70 @@
         
     }while(tabStop < terminalColumns);
     
+    modeDECAWM = NO;
+    modeDECRAWM = NO;
+    
     // cause glyphs to be created and laid out for the display
     [displayDelegate resetScreenWithRows:terminalRows andColumns:terminalColumns];
+}
+
+- (void)eraseRow:(int)row {
+    for(int i = 1; i <= terminalColumns; i++) {
+        [displayDelegate displayChar:0x20 atRow:row atColumn:i withAttributes:0];
+    }
+}
+
+- (void)clearCursorLeft {
+    // clear from start of row to cursor inclusive
+    for(int i = 1; i <= termCol; i++) {
+        [displayDelegate displayChar:0x20 atRow:termRow atColumn:i withAttributes:0];
+    }
+}
+
+- (void)clearCursorRight {
+    // clear from cursor to end of row inclusive
+    for(int i = termCol; i <= terminalColumns; i++) {
+        [displayDelegate displayChar:0x20 atRow:termRow atColumn:i withAttributes:0];
+    }
+}
+
+// ANSI command 'K'
+- (void)commandEraseLine:(unsigned char)argument {
+    switch(argument) {
+        case '0': // clear from cursor through end of line
+            [self clearCursorRight];
+            break;
+        case '1': // clear from beginning of line through cursor
+            [self clearCursorLeft];
+            break;
+        default:
+            [self eraseRow:termRow];
+            break;
+    }
+}
+
+- (void)commandEraseScreen:(unsigned char)argument {
+    switch(argument) {
+        case '0': 
+            [self clearCursorRight];
+            // clear rest of rows below cursor
+            for(int i = termRow + 1; i <= terminalRows; i++) {
+                [self eraseRow:i];
+            }
+            break;
+        case '1':
+            // clear rows above cursor row
+            for(int i = 1; i < termRow; i++) {
+                [self eraseRow:i];
+            }
+            [self clearCursorLeft];
+            break;
+        default: // clear all
+            for(int i = 1; i < terminalRows; i++) {
+                [self eraseRow:i];
+            }
+            break;
+    }
 }
 
 // ESC [ ? 1 ; 2 c VT100
@@ -249,24 +321,29 @@
             
             if(*bytes == '?') {
                 switch(*(bytes + 1)) {
-/*                        
+                        
                     case 3: 
                         // P s = 3 → 132 Column Mode (DECCOLM)
-                        [_displayDelegate setColumns:132];
+//                        [_displayDelegate setColumns:132];
                         break;
                     case 6:
                         // P s = 6 → Origin Mode (DECOM)
-                        [_displayDelegate setOriginMode:YES];
+  //                      [_displayDelegate setOriginMode:YES];
+//                        NSLog(@"P s = 6 → Origin Mode (DECOM)");
                         break;
                     case 7:
                         // P s = 7 → Wraparound Mode (DECAWM) 
-                        [_displayDelegate setAutoWrapMode:YES];
+                        modeDECAWM = YES;
                         break;
                     case 40:
                         // P s = 4 0 → Allow 80 → 132 Mode
-                        NSLog(@"unhandled");
+//                        NSLog(@"P s = 4 0 → Allow 80 → 132 Mode");
                         break;
- */
+
+                    case 45:
+                        // Send: <27> [ ? 4 5 h Enable Reverse-wraparound Mode. 
+                        modeDECRAWM == YES;
+                        break;
                     default:
                         break;
                         
@@ -285,7 +362,7 @@
                        
                     case 1:
                         // Send: <27> [ ? 1 1 → Normal Cursor Keys (DECCKM). 
-                        NSLog(@"Normal Cursor Keys (DECCKM), should send ANSI sequences");
+//                        NSLog(@"Normal Cursor Keys (DECCKM), should send ANSI sequences");
                         break;
                     case 3:
                         // Send: <27> [ ? 3 l 80 Column Mode (DECCOLM). 
@@ -293,37 +370,36 @@
                         break;
                     case 4:
                         // Send: <27> [ ? 4 l Jump (Fast) Scroll (DECSCLM).
-                        NSLog(@"Jump (Fast) Scroll (DECSCLM) (smooth scroll not implemented yet)");
+//                        NSLog(@"Jump (Fast) Scroll (DECSCLM) (smooth scroll not implemented yet)");
                         break;
                     case 5:
                         // Send: <27> [ ? 5 l Normal Video (DECSCNM).  
-                        NSLog(@"Normal Video (DECSCNM) (inverse video mode not implemented yet)");
+//                        NSLog(@"Normal Video (DECSCNM) (inverse video mode not implemented yet)");
                         break;
                     case 6:
                         // Send: <27> [ ? 6 l Normal Cursor Mode (DECOM). 
-                        NSLog(@"Normal Cursor Mode (DECOM) (use whole screen, origin mode not implemented yet");
+//                        NSLog(@"Normal Cursor Mode (DECOM) (use whole screen, origin mode not implemented yet");
                         //[_displayDelegate setOriginMode:NO];
                         break;
                     case 7:
                         // Send: <27> [ ? 7 h No Wraparound Mode (DECAWM). 
-                        NSLog(@"No Wraparound Mode (DECAWM)");
-                        //[_displayDelegate setAutoWrapMode:NO];
+                        modeDECAWM = NO;
                         break;
                     case 8:
                         // Send: <27> [ ? 8 l No Auto-repeat Keys (DECARM). 
-                        NSLog(@"No Auto-repeat Keys (DECARM) (not implemented yet)");
+//                        NSLog(@"No Auto-repeat Keys (DECARM) (not implemented yet)");
                         break;
                     case 40:
                         // Send: <27> [ ? 4 0 h Disallow 80 → 132 Mode. 
-                        NSLog(@"Disallow 80 → 132 Mode");
+//                        NSLog(@"Disallow 80 → 132 Mode");
                         break;
                     case 45:
                         // Send: <27> [ ? 4 5 l No Reverse-wraparound Mode. 
-                        NSLog(@"No Reverse-wraparound Mode (not implemented yet)");
+                        modeDECRAWM == NO;
                         break;
 
                     default:
-                        NSLog(@"?l unhandled");
+//                        NSLog(@"?l unhandled");
                         break;
                         
                 }
@@ -334,14 +410,14 @@
         case 'm': // set display attributes
         {
             if(len == 0) {
-                // reset to default (plain) text
+//                NSLog(@"reset to plain text");
             } else {
                 arguments = [self parseNumerics:sequence length:len];
                 unsigned char *bytes = [arguments mutableBytes];
                 if(*bytes == 0) {
-                    // reset to default (plain) text
+//                    NSLog(@"reset to plain text");
                 } else {
-                    // set text attribute according to value
+//                    NSLog(@"setting some fancy text");
                 }
             }
         }
@@ -349,6 +425,8 @@
         case 'r': // set top and bottom margins
         {
             if(len == 0) {
+//                NSLog(@"resetting top/bottom margins");
+
                 // Default margins (entire screen) set
 //                [_displayDelegate setMarginsTop:0 bottom:0];
             } else {
@@ -369,6 +447,8 @@
                 else 
                     bottomRow = *(bytes + 1);
                 
+//                NSLog(@"setting top marging %d bottom margin %d", topRow, bottomRow);
+
 //                [_displayDelegate setMarginsTop:topRow bottom:bottomRow];
             }
         }
@@ -382,8 +462,8 @@
             if(count == 0)
                 count = 1;
             
-            while(count--)
-                [self decrementRow];
+            while((count--) && (termRow > 1))
+                [self setRow:termRow - 1 andColumn:termCol];
         }
             break;
         case 'B': // CUD cursor down
@@ -395,8 +475,8 @@
             if(count == 0)
                 count = 1;
             
-            while(count--)
-                [self advanceRow];
+            while((count--) && (termRow < terminalRows))
+                [self setRow:termRow + 1 andColumn:termCol];
         }
             break;
         case 'C': // CUF cursor forward
@@ -408,8 +488,8 @@
             if(count == 0)
                 count = 1;
             
-            while(count--)
-                [self advanceColumn];
+            while((count--) && (termCol < terminalColumns))
+                [self setRow:termRow andColumn:termCol + 1];
         }
             break;
         case 'D': // CUB cursor backward
@@ -421,54 +501,58 @@
             if(count == 0)
                 count = 1;
             
-            while(count--)
-                [self decrementColumn];
+            while((count--) && (termCol > 1))
+                [self setRow:termRow andColumn:termCol - 1];
         }
             break;
         case 'J': // ED erase in dsplay
         {
             switch(len) {
                 case 0: // default erase to end of screen
-//                    [self commandEraseScreen:'0'];
+                    [self commandEraseScreen:'0'];
                     break;
                 case 1: 
-//                    [self commandEraseScreen:*sequence];
+                    [self commandEraseScreen:*sequence];
                     break;
             }
         }
             break;
         case 'K': // EL Erase in line
+        {            
             switch(len) {
                 case 0: // default erase to end of screen
-//                    [self commandEraseLine:'0'];
+                    [self commandEraseLine:'0'];
                     break;
                 case 1: 
-//                    [self commandEraseLine:*sequence];
+                    [self commandEraseLine:*sequence];
                     break;
             }
+        }
             break;
         case 'H':
         case 'f': // HVP horizontal and vertical position
         {
-            if(len == 0) {
-                // home command
-                termRow = 1;
-                termCol = 1;
-            } else {
+            // default (if len is zero)
+            int newRow = 1;
+            int newCol = 1;
+
+            if(len != 0) {
                 arguments = [self parseNumerics:sequence length:len];
                 unsigned char *bytes = [arguments mutableBytes];
-                termRow = *bytes;
-                termCol = *(bytes + 1);
+                newRow = *bytes;
+                newCol = *(bytes + 1);
                 
-                if(termRow == COMMAND_DEFAULT_VALUE)
-                    termRow = 1;
-                if(termCol == COMMAND_DEFAULT_VALUE)
-                    termCol = 1;
+                if(newRow == COMMAND_DEFAULT_VALUE)
+                    newRow = 1;
+                if(newCol == COMMAND_DEFAULT_VALUE)
+                    newCol = 1;
             }
+            [self setRow:newRow andColumn:newCol];
         }
             break;
         default:
-            NSLog(@"Unhandled ANSI command sequence finalChar %c", finalChar);
+//            NSLog(@"Unhandled ANSI command sequence finalChar %c", finalChar);
+            break;
     }
     
 }
@@ -492,14 +576,12 @@
         case '8': {
             if(len == 0) {
                 // restore cursor previously saved attributes
-                NSLog(@"unhandled");
+//                NSLog(@"unhandled");
             } else if ((len == 1) && (*sequence == '#')) {
                 // test mode; fill screen with 'E' chars (DECALN)
                 for(int i = 1; i <= terminalRows; i++) {
-                    termRow = i;
-                    termCol = 1;
                     for(int j = 1; j < terminalColumns; j++) {
-                        [self characterDisplay:'E'];
+                        [displayDelegate displayChar:'E' atRow:i atColumn:j withAttributes:0];
                     }
                 }
             }
@@ -513,7 +595,7 @@
             break;
         case 'E': { // NEL first position on next line
             [self advanceRow];
-            termCol = 1;
+            [self setRow:termRow andColumn:1];
         }
             break;
         case 'M': { // RI
@@ -521,7 +603,7 @@
         }
             break;
         default:
-            NSLog(@"Unhandled DEC command sequence %c", finalChar);
+//            NSLog(@"Unhandled DEC command sequence %c", finalChar);
             break;
     }
 }
@@ -533,22 +615,30 @@
 - (void)characterDisplay:(unsigned char)c {
 
     [displayDelegate displayChar:c atRow:termRow atColumn:termCol withAttributes:0];
-    [self advanceColumn];
+    if(termCol < terminalColumns)
+        [self advanceColumn];
 }
 
 - (void)characterNonDisplay:(unsigned char)c {
+    
     switch(c) {
         case kTelnetCharCR:
+            NSLog(@"CR!");
             [self setRow:termRow andColumn:1];
             break;
         case kTelnetCharFF:
         case kTelnetCharVT:
+            NSLog(@"FF!");
             [self advanceRow];
             break;
         case kTelnetCharLF:
+            NSLog(@"LF!");
             [self advanceRow];
+            [self setRow:termRow andColumn:1];
             break;
         case kTelnetCharHT:            
+            NSLog(@"HT!");
+
             // advance to next horizontal tab position or right margin if there are no more
         {
             // look for next tabstop after current column position
@@ -565,14 +655,15 @@
         }
             break;
         case kTelnetCharBS:            
+            NSLog(@"BS!");
             // move the cursor back
             [self decrementColumn];
             break;
         case kTelnetCharBEL:
-            NSLog(@"ding!");
+//            NSLog(@"ding!");
             break;
         case kTelnetCharNUL:
-            NSLog(@"NUL");
+//            NSLog(@"NUL");
         default:
             break;
     }
@@ -581,7 +672,7 @@
 // interpret the 
 - (void)processCommand:(NSData *)command {
     
-    //[self logCommand:command];
+    [self logCommand:command];
 
     unsigned char * c = (unsigned char *)[command bytes];
     

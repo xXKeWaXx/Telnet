@@ -27,6 +27,11 @@
     int terminalColumns;
     int terminalRows;
     
+    BOOL scrollAvoided;
+    
+    BOOL modeDECAWM;
+    BOOL modeDECRAWM;
+
 }
 
 @property id<DisplayDelegate> __weak displayDelegate;

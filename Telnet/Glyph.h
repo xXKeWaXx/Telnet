@@ -21,8 +21,8 @@ typedef enum _intensity {
 } GlyphIntensity;
 
 typedef enum _color {
-
-    kGlyphColorBlack,
+    // normal           // high intensity
+    kGlyphColorBlack,   // dark gray
     kGlyphColorRed,
     kGlyphColorGreen,
     kGlyphColorYellow,
@@ -45,13 +45,22 @@ typedef enum _color {
 - (void)eraseWithBG:(GlyphColor)background;
 
 + (UIColor *)termBlackColor;
++ (UIColor *)termDarkGrayColor;
 + (UIColor *)termRedColor;
++ (UIColor *)termIntenseRedColor;
 + (UIColor *)termGreenColor;
++ (UIColor *)termIntenseGreenColor;
 + (UIColor *)termYellowColor;
++ (UIColor *)termIntenseYellowColor;
 + (UIColor *)termBlueColor;
++ (UIColor *)termIntenseBlueColor;
 + (UIColor *)termMagentaColor;
++ (UIColor *)termIntenseMagentaColor;
 + (UIColor *)termCyanColor;
++ (UIColor *)termIntenseCyanColor;
 + (UIColor *)termGrayColor;
-+ (UIColor *)UIColorWithGlyphColor:(GlyphColor)glyphColor;
++ (UIColor *)termWhiteColor;
+
++ (UIColor *)UIColorWithGlyphColor:(GlyphColor)glyphColor intensity:(BOOL)intense;
 
 @end
