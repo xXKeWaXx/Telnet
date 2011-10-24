@@ -97,15 +97,17 @@ static inline int colIndex(int colNum) { return colNum - 1; }
 }
 
 // save the outgoing roll to the scrollback buffer, move top row to bottom (reuse) and move all glyphs up
-- (void)scrollUp {
+- (void)scrollUpRegionTop:(int)top regionBottom:(int)bottom {
     
-    int rowCount = [terminalRows count];
-    NSMutableArray *topLine = [terminalRows objectAtIndex:0];
-    [terminalRows removeObjectAtIndex:0];
+    int rowCount = bottom - (top - 1);
+    NSMutableArray *topLine = [terminalRows objectAtIndex:rowIndex(top)];
+
+    // save text of top line to scrollback buffer
+
+    // remove top line of scroll region, it scrolls away
+    [terminalRows removeObjectAtIndex:rowIndex(top)];
     
-    // save text from topLine in the scroll buffer
-    
-    // alter top line to become bottom line, text is cleared and frame.origin.y set
+    // recycle old top line to become bottom line, text cleared and frame set
     CGRect glyphFrame;
     CGFloat rowYOrigin = kGlyphHeight * (rowCount - 1);
     for(Glyph* glyph in topLine) {
@@ -114,18 +116,21 @@ static inline int colIndex(int colNum) { return colNum - 1; }
         glyphFrame.origin.y = rowYOrigin;
         glyph.frame = glyphFrame;
     }
-    // alter frame of all other lines so that they move up one line
-    rowYOrigin = 0.f;
-    for(NSMutableArray *array in terminalRows) {
-        for(UILabel* glyph in array) {
+
+    // alter frame of all other scrolled lines so that they move up one line
+    rowYOrigin = kGlyphHeight * (top - 1);
+    for(int i = top; i <= (bottom - 1); i++) {
+        NSMutableArray *rowArray = [terminalRows objectAtIndex:rowIndex(i)];
+        for(UILabel* glyph in rowArray) {
             glyphFrame = glyph.frame;
             glyphFrame.origin.y = rowYOrigin;
             glyph.frame = glyphFrame;
         }
         rowYOrigin += kGlyphHeight;
     }
-    // add the bottom line
-    [terminalRows addObject:topLine];
+    
+    // re-insert the bottom line
+    [terminalRows insertObject:topLine atIndex:rowIndex(bottom)];
 }
 
 @end

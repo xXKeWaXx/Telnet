@@ -48,14 +48,25 @@
 #pragma mark Management of cursor
 
 - (void)setRow:(int)row andColumn:(int)col {
-    if(row > terminalRows)
-        row = terminalRows;
-    if(row > terminalColumns)
-        row = terminalColumns;
     
+    if(modeDECOM == NO) {
+        if(row > terminalRows)
+            row = terminalRows;
+        if(row < 1)
+            row = 1;
+    } else {
+        if(row > bottomRow)
+            row = bottomRow;
+        if(row < topRow)
+            row = topRow;
+    }
+    if(col > terminalColumns)
+        col = terminalColumns;
+
     termRow = row;
     termCol = col;
-    NSLog(@"Cursor moved to %d,%d", termRow, termCol);
+    
+//    NSLog(@"Cursor moved to %d,%d", termRow, termCol);
 }
 
 - (void)decrementRow {
@@ -71,10 +82,14 @@
 // check for origin mode, handle scrolling, in simple cases just increment termRow
 - (void)advanceRow {
 
-    if(termRow == terminalRows) {
-        // cursor is on the last available row, cause display to scroll up - row, col do not change
-        [displayDelegate scrollUp];
-        [self setRow:termRow andColumn:termCol];
+    if((modeDECOM == YES) && (termRow == bottomRow)) {
+        
+        [displayDelegate scrollUpRegionTop:topRow regionBottom:bottomRow];
+        
+    } else if(termRow == terminalRows) {
+        
+        [displayDelegate scrollUpRegionTop:1 regionBottom:terminalRows];
+        
     } else {
         [self setRow:termRow + 1 andColumn:termCol];
     }
@@ -118,6 +133,7 @@
         
     }while(tabStop < terminalColumns);
     
+    modeDECOM = NO;
     modeDECAWM = NO;
     modeDECRAWM = NO;
     
@@ -328,8 +344,7 @@
                         break;
                     case 6:
                         // P s = 6 → Origin Mode (DECOM)
-  //                      [_displayDelegate setOriginMode:YES];
-//                        NSLog(@"P s = 6 → Origin Mode (DECOM)");
+                        modeDECOM = YES;
                         break;
                     case 7:
                         // P s = 7 → Wraparound Mode (DECAWM) 
@@ -378,8 +393,7 @@
                         break;
                     case 6:
                         // Send: <27> [ ? 6 l Normal Cursor Mode (DECOM). 
-//                        NSLog(@"Normal Cursor Mode (DECOM) (use whole screen, origin mode not implemented yet");
-                        //[_displayDelegate setOriginMode:NO];
+                        modeDECOM = NO;
                         break;
                     case 7:
                         // Send: <27> [ ? 7 h No Wraparound Mode (DECAWM). 
@@ -422,20 +436,18 @@
             }
         }
             break;
-        case 'r': // set top and bottom margins
+        case 'r': // set top and bottom margins DECSTBM
         {
             if(len == 0) {
-//                NSLog(@"resetting top/bottom margins");
+                
+                topRow = 1;
+                bottomRow = terminalRows;
 
-                // Default margins (entire screen) set
-//                [_displayDelegate setMarginsTop:0 bottom:0];
             } else {
                 
                 // setting top and bottom margin
                 arguments = [self parseNumerics:sequence length:len];
                 unsigned char *bytes = [arguments mutableBytes];
-                
-                int topRow, bottomRow;
                 
                 if(*bytes == COMMAND_DEFAULT_VALUE)
                     topRow = 1;
@@ -447,9 +459,6 @@
                 else 
                     bottomRow = *(bytes + 1);
                 
-//                NSLog(@"setting top marging %d bottom margin %d", topRow, bottomRow);
-
-//                [_displayDelegate setMarginsTop:topRow bottom:bottomRow];
             }
         }
             break;
@@ -462,7 +471,7 @@
             if(count == 0)
                 count = 1;
             
-            while((count--) && (termRow > 1))
+            while((count--) && ((modeDECOM) ? (termRow > topRow) : (termRow > 1)))
                 [self setRow:termRow - 1 andColumn:termCol];
         }
             break;
@@ -475,7 +484,7 @@
             if(count == 0)
                 count = 1;
             
-            while((count--) && (termRow < terminalRows))
+            while((count--) && ((modeDECOM) ? (termRow < bottomRow) : (termRow < terminalRows)))
                 [self setRow:termRow + 1 andColumn:termCol];
         }
             break;
@@ -579,7 +588,7 @@
 //                NSLog(@"unhandled");
             } else if ((len == 1) && (*sequence == '#')) {
                 // test mode; fill screen with 'E' chars (DECALN)
-                for(int i = 1; i <= terminalRows; i++) {
+                for(int i = (modeDECOM ? 1 : topRow); i <= (modeDECOM ? bottomRow : terminalRows); i++) {
                     for(int j = 1; j < terminalColumns; j++) {
                         [displayDelegate displayChar:'E' atRow:i atColumn:j withAttributes:0];
                     }
@@ -614,12 +623,33 @@
 
 - (void)characterDisplay:(unsigned char)c {
 
+    static BOOL deferredAdvance = NO;
+    
+    // if character would be displayed in final column
+    if(termCol == terminalColumns) {
+        // if advance was deferred
+        if(deferredAdvance == YES)
+            // advance column before character display
+            [self advanceColumn];
+    }
+    
+    // always clear deferred state
+    deferredAdvance = NO;
+
+    // display the character
     [displayDelegate displayChar:c atRow:termRow atColumn:termCol withAttributes:0];
-    if(termCol < terminalColumns)
+    
+    // if not in final column, advance. Else record that an advance was deferred
+    if(termCol < terminalColumns) {
         [self advanceColumn];
+    } else {
+        deferredAdvance = YES;
+    }
 }
 
 - (void)characterNonDisplay:(unsigned char)c {
+    
+    NSLog(@"Non-display character at row %d, col %d", termRow, termCol);
     
     switch(c) {
         case kTelnetCharCR:
@@ -672,7 +702,7 @@
 // interpret the 
 - (void)processCommand:(NSData *)command {
     
-    [self logCommand:command];
+//    [self logCommand:command];
 
     unsigned char * c = (unsigned char *)[command bytes];
     

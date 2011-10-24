@@ -19,6 +19,10 @@
     // current position of cursor
     int termRow;
     int termCol;
+    
+    // scroll region
+    int topRow;
+    int bottomRow;
 
     // array of tabstop column value for cursor positioning
     NSMutableArray *tabStops;
@@ -29,6 +33,7 @@
     
     BOOL scrollAvoided;
     
+    BOOL modeDECOM;
     BOOL modeDECAWM;
     BOOL modeDECRAWM;
 
