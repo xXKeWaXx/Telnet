@@ -16,7 +16,7 @@ typedef uint16_t glyphAttributes;
               atRow:(int)row 
            atColumn:(int)col 
      withAttributes:(glyphAttributes)attributes;
-- (void)scrollUpRegionTop:(int)top regionBottom:(int)bottom;
+- (void)scrollUpRegionTop:(int)top regionSpan:(int)rows;
 - (void)setColumns:(int)cols;
 
 @end

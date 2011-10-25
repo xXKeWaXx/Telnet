@@ -11,7 +11,7 @@
 #import "TelnetConstants.h"
 
 @implementation TerminalIdentity
-
+/*
 @synthesize displayDelegate = _displayDelegate;
 @synthesize responderDelegate = _responderDelegate;
 
@@ -452,7 +452,7 @@
     }
 }
 
-
+*/
 
 
 @end

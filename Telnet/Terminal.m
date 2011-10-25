@@ -84,11 +84,11 @@
 
     if((modeDECOM == YES) && (termRow == bottomRow)) {
         
-        [displayDelegate scrollUpRegionTop:topRow regionBottom:bottomRow];
+        [displayDelegate scrollUpRegionTop:topRow regionSpan:bottomRow - (topRow - 1)];
         
     } else if(termRow == terminalRows) {
         
-        [displayDelegate scrollUpRegionTop:1 regionBottom:terminalRows];
+        [displayDelegate scrollUpRegionTop:1 regionSpan:terminalRows];
         
     } else {
         [self setRow:termRow + 1 andColumn:termCol];
@@ -446,26 +446,34 @@
                 
                 topRow = 1;
                 bottomRow = terminalRows;
+                [self setRow:topRow andColumn:1]; // always move to position 1,1
 
             } else {
                 
                 // setting top and bottom margin
                 arguments = [self parseNumerics:sequence length:len];
                 unsigned char *bytes = [arguments mutableBytes];
+                uint8_t topValue = *bytes;
+                uint8_t bottomValue = *(bytes + 1);
                 
-                if(*bytes == COMMAND_DEFAULT_VALUE)
-                    topRow = 1;
-                else 
-                    topRow = *bytes;
+                if(topValue <= bottomValue) {
                 
-                if(*(bytes + 1) == COMMAND_DEFAULT_VALUE)
-                    bottomRow = 1;
-                else 
-                    bottomRow = *(bytes + 1);
-                
+                    if((topValue != COMMAND_DEFAULT_VALUE) && (topValue != 0)) {
+                        // if the value is zero or omitted, the margin is unchanged
+                        topRow = topValue;
+                    }
+                    if(topRow < 1)
+                        topRow = 1;
+                    
+                    if((bottomValue != COMMAND_DEFAULT_VALUE) && (bottomValue != 0)) {
+                        // if the value is zero or omitted, the margin is unchanged
+                        bottomRow = bottomValue;
+                    }
+                    if(bottomRow > terminalRows)
+                        bottomRow = terminalRows;
+                }
+                [self setRow:topRow andColumn:1]; // always move to position 1,1
             }
-            // DECSTBM moves the cursor to column 1, line 1 of the page
-            [self setRow:topRow andColumn:1];
         }
             break;
         case 'A': // CUU cursor up
@@ -558,7 +566,7 @@
                 newCol = *(bytes + 1);
 
                 if(modeDECOM == YES) {
-                    newRow += topRow;
+                    newRow += (topRow - 1);
                     if(newRow > bottomRow)
                         newRow = bottomRow;
                 }
@@ -663,7 +671,7 @@
 
     if(deferredAdvance == YES) {
         // advance column before character display
-        [self advanceColumn];
+        //[self advanceColumn];
         deferredAdvance = NO;
     }
     

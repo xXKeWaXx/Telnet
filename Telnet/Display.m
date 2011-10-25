@@ -96,12 +96,12 @@ static inline int colIndex(int colNum) { return colNum - 1; }
 
 }
 
-// save the outgoing roll to the scrollback buffer, move top row to bottom (reuse) and move all glyphs up
-- (void)scrollUpRegionTop:(int)top regionBottom:(int)bottom {
+// save the outgoing row to the scrollback buffer, move top row to bottom (reuse) and move all glyphs up
+- (void)scrollUpRegionTop:(int)top regionSpan:(int)rows {
     
-    int rowCount = bottom;
     NSMutableArray *topLine = [terminalRows objectAtIndex:rowIndex(top)];
-
+    int lastIndex = top + rows - 1;
+    
     // save text of top line to scrollback buffer
 
     // remove top line of scroll region, it scrolls away
@@ -109,7 +109,7 @@ static inline int colIndex(int colNum) { return colNum - 1; }
     
     // recycle old top line to become bottom line, text cleared and frame set
     CGRect glyphFrame;
-    CGFloat rowYOrigin = kGlyphHeight * (rowCount - 1);
+    CGFloat rowYOrigin = kGlyphHeight * (lastIndex - 1);
     for(Glyph* glyph in topLine) {
         glyph.text = nil;
         glyphFrame = glyph.frame;
@@ -119,7 +119,7 @@ static inline int colIndex(int colNum) { return colNum - 1; }
 
     // alter frame of all other scrolled lines so that they move up one line
     rowYOrigin = kGlyphHeight * (top - 1);
-    for(int i = top; i <= (bottom - 1); i++) {
+    for(int i = top; i <= (lastIndex - 1); i++) {
         NSMutableArray *rowArray = [terminalRows objectAtIndex:rowIndex(i)];
         for(UILabel* glyph in rowArray) {
             glyphFrame = glyph.frame;
@@ -130,7 +130,7 @@ static inline int colIndex(int colNum) { return colNum - 1; }
     }
     
     // re-insert the bottom line
-    [terminalRows insertObject:topLine atIndex:rowIndex(bottom)];
+    [terminalRows insertObject:topLine atIndex:rowIndex(lastIndex)];
 }
 
 @end
