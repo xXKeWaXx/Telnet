@@ -49,6 +49,8 @@
 
 - (void)setRow:(int)row andColumn:(int)col {
     
+    deferredAdvance = NO;
+
     if(modeDECOM == NO) {
         if(row > terminalRows)
             row = terminalRows;
@@ -65,8 +67,6 @@
 
     termRow = row;
     termCol = col;
-    
-//    NSLog(@"Cursor moved to %d,%d", termRow, termCol);
 }
 
 - (void)decrementRow {
@@ -345,6 +345,9 @@
                     case 6:
                         // P s = 6 → Origin Mode (DECOM)
                         modeDECOM = YES;
+                        // cursor home
+                        [self setRow:topRow andColumn:1];
+
                         break;
                     case 7:
                         // P s = 7 → Wraparound Mode (DECAWM) 
@@ -382,6 +385,7 @@
                     case 3:
                         // Send: <27> [ ? 3 l 80 Column Mode (DECCOLM). 
                         [displayDelegate setColumns:80];
+                        [self setRow:topRow andColumn:1];
                         break;
                     case 4:
                         // Send: <27> [ ? 4 l Jump (Fast) Scroll (DECSCLM).
@@ -460,6 +464,8 @@
                     bottomRow = *(bytes + 1);
                 
             }
+            // DECSTBM moves the cursor to column 1, line 1 of the page
+            [self setRow:topRow andColumn:1];
         }
             break;
         case 'A': // CUU cursor up
@@ -550,7 +556,13 @@
                 unsigned char *bytes = [arguments mutableBytes];
                 newRow = *bytes;
                 newCol = *(bytes + 1);
-                
+
+                if(modeDECOM == YES) {
+                    newRow += topRow;
+                    if(newRow > bottomRow)
+                        newRow = bottomRow;
+                }
+
                 if(newRow == COMMAND_DEFAULT_VALUE)
                     newRow = 1;
                 if(newCol == COMMAND_DEFAULT_VALUE)
@@ -623,8 +635,6 @@
 
 - (void)characterDisplay:(unsigned char)c {
 
-    static BOOL deferredAdvance = NO;
-    
     // if character would be displayed in final column
     if(termCol == terminalColumns) {
         // if advance was deferred
@@ -650,7 +660,14 @@
 - (void)characterNonDisplay:(unsigned char)c {
     
     NSLog(@"Non-display character at row %d, col %d", termRow, termCol);
+
+    if(deferredAdvance == YES) {
+        // advance column before character display
+        [self advanceColumn];
+        deferredAdvance = NO;
+    }
     
+
     switch(c) {
         case kTelnetCharCR:
             NSLog(@"CR!");

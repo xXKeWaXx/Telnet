@@ -91,38 +91,10 @@
     [self.view addSubview:inputTextView];
     [inputTextView becomeFirstResponder];
 
-    // terminal view is the class that displays terminal interaction.
-    // It implements TerminalDisplayDelegate
-/*
-    TerminalView *terminalView = [[TerminalView alloc] initWithFrame:CGRectZero];
-    [self.view addSubview:terminalView];
-    CGFloat termWidth = terminalView.frame.size.width;
-    
-    CGRect terminalRect = terminalView.frame;
-    terminalRect.origin.x = (768 - termWidth) / 2;
-    terminalRect.origin.y = terminalRect.origin.x;
-    terminalView.frame = terminalRect;
-
-    inputTextView = [[UITextView alloc] initWithFrame:CGRectMake(terminalRect.origin.x, terminalRect.origin.y + terminalRect.size.height + 10, terminalRect.size.width, 18.f)];
-    inputTextView.delegate = self;
-    [self.view addSubview:inputTextView];
-    [inputTextView becomeFirstResponder];
-    
-    // terminal identity is the terminal's personality, defining it as VT220, xTerm etc.
-    identity = [[TerminalIdentity alloc] init];
-    identity.displayDelegate = terminalView;
-    identity.responderDelegate = self;
-    
-    // connection object manages the actual connection through GCDAsyncSocket
-    connection = [[TelnetConnection alloc] init];
-    connection.parserDelegate = identity;
-    [connection setOptions:nil];
-*/    
         // enable telnet
         // sudo sh-3.2# launchctl
         // launchd% load -F /System/Library/LaunchDaemons/telnet.plist
 
-//    [connection open:@"172.16.0.230" port:23];
     [connection open:@"127.0.0.1" port:23];
 
 //    [connection open:@"nethack.kraln.com" port:23];

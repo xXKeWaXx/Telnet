@@ -16,6 +16,8 @@
     id<DisplayDelegate> __weak displayDelegate;
     id<ConnectionDelegate> __weak connectionDelegate;
     
+    BOOL deferredAdvance;
+    
     // current position of cursor
     int termRow;
     int termCol;

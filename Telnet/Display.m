@@ -99,7 +99,7 @@ static inline int colIndex(int colNum) { return colNum - 1; }
 // save the outgoing roll to the scrollback buffer, move top row to bottom (reuse) and move all glyphs up
 - (void)scrollUpRegionTop:(int)top regionBottom:(int)bottom {
     
-    int rowCount = bottom - (top - 1);
+    int rowCount = bottom;
     NSMutableArray *topLine = [terminalRows objectAtIndex:rowIndex(top)];
 
     // save text of top line to scrollback buffer
