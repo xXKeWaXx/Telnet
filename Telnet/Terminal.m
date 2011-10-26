@@ -13,6 +13,7 @@
 
 #define kTerminalRows (24)
 #define kTerminalColumns (80)
+#define COMMAND_DEFAULT_VALUE (255)
 
 @synthesize displayDelegate;
 @synthesize connectionDelegate;
@@ -225,10 +226,49 @@
     [connectionDelegate sendData:responseData];
 }
 
+- (int)findTabIndex:(int)col {
+    
+    int location = INT_MAX;
+    int index = 0;
+    
+    for(NSNumber *tabStopNumber in tabStops) {
+        if([tabStopNumber intValue] == termCol) {
+            location = index;
+            break;
+        }
+        index++;
+    }
+    return location;
+}
+
+- (void)clearTabs:(int)option {
+    
+    if(option == 3) {
+        
+        // clear all tabs
+        [tabStops removeAllObjects];
+        
+    } else if((option == 0) || (option == COMMAND_DEFAULT_VALUE)) {
+        
+        // clear tab at current column
+        int location = [self findTabIndex:termCol];
+        
+        if(location != INT_MAX)
+            [tabStops removeObjectAtIndex:location];
+    }
+    
+}
+
+- (void)setTab:(int)col {
+    
+    // don't set a tab if already set
+    if([self findTabIndex:termCol] == INT_MAX) {
+        [tabStops addObject:[NSNumber numberWithInt:termCol]];
+    }
+}
 #pragma mark -
 #pragma mark Identify and act on command sequences
 
-#define COMMAND_DEFAULT_VALUE (255)
 
 // for extracting single, simple values
 - (int)parseSimpleNumeric:(unsigned char *)sequence length:(int)len {
@@ -298,7 +338,6 @@
     return numericSequence;
 }
 
-
 // command sequence comes in reverse to make processing easier
 - (void)processANSICommandSequence:(unsigned char *)sequence withLength:(int)len {
     
@@ -329,7 +368,11 @@
             }
         }
             break;
-            
+          
+        case 'g': // clear tabs
+            count = [self parseSimpleNumeric:sequence length:len];
+            [self clearTabs:count];
+            break;
         case 'h': // SET DEC private modes DECSET
         {
             arguments = [self parseNumerics:sequence length:len];
@@ -355,7 +398,6 @@
                         break;
                     case 40:
                         // P s = 4 0 → Allow 80 → 132 Mode
-//                        NSLog(@"P s = 4 0 → Allow 80 → 132 Mode");
                         break;
 
                     case 45:
@@ -380,7 +422,7 @@
                        
                     case 1:
                         // Send: <27> [ ? 1 1 → Normal Cursor Keys (DECCKM). 
-//                        NSLog(@"Normal Cursor Keys (DECCKM), should send ANSI sequences");
+                        NSLog(@"Normal Cursor Keys (DECCKM), should send ANSI sequences");
                         break;
                     case 3:
                         // Send: <27> [ ? 3 l 80 Column Mode (DECCOLM). 
@@ -389,11 +431,11 @@
                         break;
                     case 4:
                         // Send: <27> [ ? 4 l Jump (Fast) Scroll (DECSCLM).
-//                        NSLog(@"Jump (Fast) Scroll (DECSCLM) (smooth scroll not implemented yet)");
+                        NSLog(@"Jump (Fast) Scroll (DECSCLM) (smooth scroll not implemented yet)");
                         break;
                     case 5:
                         // Send: <27> [ ? 5 l Normal Video (DECSCNM).  
-//                        NSLog(@"Normal Video (DECSCNM) (inverse video mode not implemented yet)");
+                        NSLog(@"Normal Video (DECSCNM) (inverse video mode not implemented yet)");
                         break;
                     case 6:
                         // Send: <27> [ ? 6 l Normal Cursor Mode (DECOM). 
@@ -405,11 +447,11 @@
                         break;
                     case 8:
                         // Send: <27> [ ? 8 l No Auto-repeat Keys (DECARM). 
-//                        NSLog(@"No Auto-repeat Keys (DECARM) (not implemented yet)");
+                        NSLog(@"No Auto-repeat Keys (DECARM) (not implemented yet)");
                         break;
                     case 40:
                         // Send: <27> [ ? 4 0 h Disallow 80 → 132 Mode. 
-//                        NSLog(@"Disallow 80 → 132 Mode");
+                        NSLog(@"Disallow 80 → 132 Mode (not implemented yet)");
                         break;
                     case 45:
                         // Send: <27> [ ? 4 5 l No Reverse-wraparound Mode. 
@@ -417,7 +459,7 @@
                         break;
 
                     default:
-//                        NSLog(@"?l unhandled");
+                        NSLog(@"?l unhandled");
                         break;
                         
                 }
@@ -427,15 +469,16 @@
             
         case 'm': // set display attributes
         {
+            NSLog(@"You're not seeing this?");
             if(len == 0) {
-//                NSLog(@"reset to plain text");
+                NSLog(@"reset to plain text");
             } else {
                 arguments = [self parseNumerics:sequence length:len];
                 unsigned char *bytes = [arguments mutableBytes];
                 if(*bytes == 0) {
-//                    NSLog(@"reset to plain text");
+                    NSLog(@"reset to plain text");
                 } else {
-//                    NSLog(@"setting some fancy text");
+                    NSLog(@"setting some fancy text");
                 }
             }
         }
@@ -528,6 +571,12 @@
                 [self setRow:termRow andColumn:termCol - 1];
         }
             break;
+        case 'I': // tab something
+        {
+            NSLog(@"What should CSI 'I' do?");
+        }
+            break;
+            
         case 'J': // ED erase in dsplay
         {
             switch(len) {
@@ -579,8 +628,14 @@
             [self setRow:newRow andColumn:newCol];
         }
             break;
+        case 'Z': // tab something
+        {
+            NSLog(@"What should CSI 'Z' do?");
+        }
+            break;
+
         default:
-//            NSLog(@"Unhandled ANSI command sequence finalChar %c", finalChar);
+            NSLog(@"Unhandled ANSI command sequence finalChar %c", finalChar);
             break;
     }
     
@@ -605,7 +660,7 @@
         case '8': {
             if(len == 0) {
                 // restore cursor previously saved attributes
-//                NSLog(@"unhandled");
+                NSLog(@"unhandled DEC command sequence ending in 8");
             } else if ((len == 1) && (*sequence == '#')) {
                 // test mode; fill screen with 'E' chars (DECALN)
                 for(int i = (modeDECOM ? 1 : topRow); i <= (modeDECOM ? bottomRow : terminalRows); i++) {
@@ -617,6 +672,9 @@
         }
             break;
             
+        case 'B':
+            NSLog(@"What is B supposed to do?");
+            break;
         case 'D': { // IND cursor index
             [self advanceRow];
             
@@ -627,12 +685,16 @@
             [self setRow:termRow andColumn:1];
         }
             break;
+        case 'H': { // HTS set tab at this position
+            [self setTab:termCol];
+        } 
+            break;
         case 'M': { // RI
             [self decrementRow];
         }
             break;
         default:
-//            NSLog(@"Unhandled DEC command sequence %c", finalChar);
+            NSLog(@"Unhandled DEC command sequence %c", finalChar);
             break;
     }
 }
@@ -667,8 +729,6 @@
 
 - (void)characterNonDisplay:(unsigned char)c {
     
-    NSLog(@"Non-display character at row %d, col %d", termRow, termCol);
-
     if(deferredAdvance == YES) {
         // advance column before character display
         //[self advanceColumn];
@@ -678,22 +738,17 @@
 
     switch(c) {
         case kTelnetCharCR:
-            NSLog(@"CR!");
             [self setRow:termRow andColumn:1];
             break;
         case kTelnetCharFF:
         case kTelnetCharVT:
-            NSLog(@"FF!");
             [self advanceRow];
             break;
         case kTelnetCharLF:
-            NSLog(@"LF!");
             [self advanceRow];
             [self setRow:termRow andColumn:1];
             break;
         case kTelnetCharHT:            
-            NSLog(@"HT!");
-
             // advance to next horizontal tab position or right margin if there are no more
         {
             // look for next tabstop after current column position
@@ -706,19 +761,18 @@
             }
             if(tab == 0)
                 tab = terminalColumns;
+            NSLog(@"tabbed to col %d", tab);
             [self setRow:termRow andColumn:tab];
         }
             break;
         case kTelnetCharBS:            
-            NSLog(@"BS!");
             // move the cursor back
             [self decrementColumn];
             break;
         case kTelnetCharBEL:
-//            NSLog(@"ding!");
+            NSLog(@"ding!");
             break;
         case kTelnetCharNUL:
-//            NSLog(@"NUL");
         default:
             break;
     }

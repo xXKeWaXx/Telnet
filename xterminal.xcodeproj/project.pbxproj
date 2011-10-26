@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		660A7D41141B80BF003C0010 /* TerminalIdentity.m in Sources */ = {isa = PBXBuildFile; fileRef = 660A7D40141B80BF003C0010 /* TerminalIdentity.m */; };
 		663E6FC914445C85007ECA01 /* Objects.rtf in Resources */ = {isa = PBXBuildFile; fileRef = 663E6FC814445C85007ECA01 /* Objects.rtf */; };
 		663E6FCD14445DB0007ECA01 /* Display.m in Sources */ = {isa = PBXBuildFile; fileRef = 663E6FCC14445DB0007ECA01 /* Display.m */; };
 		663E6FD01444604F007ECA01 /* Terminal.m in Sources */ = {isa = PBXBuildFile; fileRef = 663E6FCF1444604F007ECA01 /* Terminal.m */; };
@@ -27,14 +26,11 @@
 		66AE055713FFC53D00DF9D41 /* GCDAsyncSocket.m in Sources */ = {isa = PBXBuildFile; fileRef = 66AE055613FFC53D00DF9D41 /* GCDAsyncSocket.m */; };
 		66AE055913FFC58400DF9D41 /* CFNetwork.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 66AE055813FFC58400DF9D41 /* CFNetwork.framework */; };
 		66AE055C13FFC60100DF9D41 /* TelnetConnection.m in Sources */ = {isa = PBXBuildFile; fileRef = 66AE055B13FFC60100DF9D41 /* TelnetConnection.m */; };
-		66AE056913FFE49400DF9D41 /* TerminalView.m in Sources */ = {isa = PBXBuildFile; fileRef = 66AE056813FFE49400DF9D41 /* TerminalView.m */; };
 		66AE056C13FFE4B200DF9D41 /* Glyph.m in Sources */ = {isa = PBXBuildFile; fileRef = 66AE056B13FFE4B200DF9D41 /* Glyph.m */; };
 		66AE056E13FFE51200DF9D41 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 66AE056D13FFE51200DF9D41 /* CoreGraphics.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		660A7D3F141B80BF003C0010 /* TerminalIdentity.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TerminalIdentity.h; sourceTree = "<group>"; };
-		660A7D40141B80BF003C0010 /* TerminalIdentity.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TerminalIdentity.m; sourceTree = "<group>"; };
 		660A7D42141B82EE003C0010 /* TerminalConstants.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TerminalConstants.h; sourceTree = "<group>"; };
 		663E6FC814445C85007ECA01 /* Objects.rtf */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.rtf; path = Objects.rtf; sourceTree = "<group>"; };
 		663E6FCB14445DB0007ECA01 /* Display.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Display.h; sourceTree = "<group>"; };
@@ -70,8 +66,6 @@
 		66AE055813FFC58400DF9D41 /* CFNetwork.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CFNetwork.framework; path = System/Library/Frameworks/CFNetwork.framework; sourceTree = SDKROOT; };
 		66AE055A13FFC60100DF9D41 /* TelnetConnection.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TelnetConnection.h; path = "Telnet Connection/TelnetConnection.h"; sourceTree = "<group>"; };
 		66AE055B13FFC60100DF9D41 /* TelnetConnection.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = TelnetConnection.m; path = "Telnet Connection/TelnetConnection.m"; sourceTree = "<group>"; };
-		66AE056713FFE49400DF9D41 /* TerminalView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TerminalView.h; sourceTree = "<group>"; };
-		66AE056813FFE49400DF9D41 /* TerminalView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TerminalView.m; sourceTree = "<group>"; };
 		66AE056A13FFE4B200DF9D41 /* Glyph.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Glyph.h; sourceTree = "<group>"; };
 		66AE056B13FFE4B200DF9D41 /* Glyph.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Glyph.m; sourceTree = "<group>"; };
 		66AE056D13FFE51200DF9D41 /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
@@ -192,10 +186,6 @@
 				66AE055B13FFC60100DF9D41 /* TelnetConnection.m */,
 				66510FE9140BB1AE00DE90F7 /* TelnetConstants.h */,
 				66A716BF143871A200944B67 /* Option Handlers */,
-				66AE056713FFE49400DF9D41 /* TerminalView.h */,
-				66AE056813FFE49400DF9D41 /* TerminalView.m */,
-				660A7D3F141B80BF003C0010 /* TerminalIdentity.h */,
-				660A7D40141B80BF003C0010 /* TerminalIdentity.m */,
 				660A7D42141B82EE003C0010 /* TerminalConstants.h */,
 				66EE96121446239A00427522 /* ParserDelegate.h */,
 			);
@@ -271,11 +261,9 @@
 				66AE054B13FFC51900DF9D41 /* ViewController.m in Sources */,
 				66AE055713FFC53D00DF9D41 /* GCDAsyncSocket.m in Sources */,
 				66AE055C13FFC60100DF9D41 /* TelnetConnection.m in Sources */,
-				66AE056913FFE49400DF9D41 /* TerminalView.m in Sources */,
 				66AE056C13FFE4B200DF9D41 /* Glyph.m in Sources */,
 				66510FE7140BAAAA00DE90F7 /* TelnetOptionHandler.m in Sources */,
 				66510FED140BB84300DE90F7 /* TelnetOptionTerminalType.m in Sources */,
-				660A7D41141B80BF003C0010 /* TerminalIdentity.m in Sources */,
 				66A716C3143871D300944B67 /* TelnetOptionSGA.m in Sources */,
 				66A716C6143871E800944B67 /* TelnetOptionEcho.m in Sources */,
 				663E6FCD14445DB0007ECA01 /* Display.m in Sources */,

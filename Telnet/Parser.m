@@ -187,7 +187,6 @@ typedef enum _TerminalDataState {
                     [param appendBytes:&d length:1];
                     state = kStateCSIParam;
                 } else if(d >= 0x20 && d <= 0x2f) {
-                    NSLog(@"What is THIS?");
                     [param appendBytes:&d length:1];
                     state = kStateCSIIntermediate;
                 } else if(d >= 0x3a) {

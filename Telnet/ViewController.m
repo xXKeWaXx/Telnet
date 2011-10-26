@@ -45,9 +45,6 @@
 
 - (void)keyPressed:(NSNotification*)notification {
  
-    NSLog(@"%@", [notification name]);
-//    NSLog(@"%@", [notification object]);
-//    NSLog(@"%@", [notification userInfo]);
 }
           
 #pragma mark - View lifecycle
