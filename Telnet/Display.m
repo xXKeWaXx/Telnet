@@ -91,6 +91,16 @@ static inline int colIndex(int colNum) { return colNum - 1; }
                               objectAtIndex:colIndex(col)];
     
     // check attributes, set display
+    if(attributes & kModeDECSCNM) {
+        glyph.backgroundColor = [Glyph UIColorWithGlyphColor:foregroundColor intensity:(attributes & kModeIntensity)];
+        glyph.textColor = [Glyph UIColorWithGlyphColor:backgroundColor intensity:(attributes & kModeIntensity)];
+    } else {
+        glyph.textColor = [Glyph UIColorWithGlyphColor:foregroundColor intensity:(attributes & kModeIntensity)];
+        glyph.backgroundColor = [Glyph UIColorWithGlyphColor:backgroundColor intensity:(attributes & kModeIntensity)];
+        
+    }
+    
+        
 
     glyph.text = [NSString stringWithFormat:@"%c", c];
 

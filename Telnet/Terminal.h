@@ -35,10 +35,10 @@
     
     BOOL scrollAvoided;
     
-    BOOL modeDECOM;
-    BOOL modeDECAWM;
-    BOOL modeDECRAWM;
-
+    BOOL modeDECOM;     // origin mode
+    BOOL modeDECAWM;    // auto wrap mode
+    BOOL modeDECRAWM;   // reverse auto wrap
+    BOOL modeDECSCNM;   // screen light mode
 }
 
 @property id<DisplayDelegate> __weak displayDelegate;

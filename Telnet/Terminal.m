@@ -137,28 +137,38 @@
     modeDECOM = NO;
     modeDECAWM = NO;
     modeDECRAWM = NO;
+    modeDECSCNM = NO;
     
     // cause glyphs to be created and laid out for the display
     [displayDelegate resetScreenWithRows:terminalRows andColumns:terminalColumns];
 }
 
+- (glyphAttributes)attributes {
+
+    glyphAttributes currentAttributes = 0;
+    
+    if(modeDECSCNM) currentAttributes |= kModeDECSCNM;
+    
+    return currentAttributes;
+}
+
 - (void)eraseRow:(int)row {
     for(int i = 1; i <= terminalColumns; i++) {
-        [displayDelegate displayChar:0x20 atRow:row atColumn:i withAttributes:0];
+        [displayDelegate displayChar:0x20 atRow:row atColumn:i withAttributes:[self attributes]];
     }
 }
 
 - (void)clearCursorLeft {
     // clear from start of row to cursor inclusive
     for(int i = 1; i <= termCol; i++) {
-        [displayDelegate displayChar:0x20 atRow:termRow atColumn:i withAttributes:0];
+        [displayDelegate displayChar:0x20 atRow:termRow atColumn:i withAttributes:[self attributes]];
     }
 }
 
 - (void)clearCursorRight {
     // clear from cursor to end of row inclusive
     for(int i = termCol; i <= terminalColumns; i++) {
-        [displayDelegate displayChar:0x20 atRow:termRow atColumn:i withAttributes:0];
+        [displayDelegate displayChar:0x20 atRow:termRow atColumn:i withAttributes:[self attributes]];
     }
 }
 
@@ -385,6 +395,11 @@
                         // P s = 3 → 132 Column Mode (DECCOLM)
 //                        [_displayDelegate setColumns:132];
                         break;
+                    case 5:
+                        // Send: <27> [ ? 5 h Reverse Video (DECSCNM).  
+                        modeDECSCNM = YES;
+                        break;
+
                     case 6:
                         // P s = 6 → Origin Mode (DECOM)
                         modeDECOM = YES;
@@ -435,7 +450,7 @@
                         break;
                     case 5:
                         // Send: <27> [ ? 5 l Normal Video (DECSCNM).  
-                        NSLog(@"Normal Video (DECSCNM) (inverse video mode not implemented yet)");
+                        modeDECSCNM = NO;                        
                         break;
                     case 6:
                         // Send: <27> [ ? 6 l Normal Cursor Mode (DECOM). 
@@ -665,7 +680,7 @@
                 // test mode; fill screen with 'E' chars (DECALN)
                 for(int i = (modeDECOM ? 1 : topRow); i <= (modeDECOM ? bottomRow : terminalRows); i++) {
                     for(int j = 1; j < terminalColumns; j++) {
-                        [displayDelegate displayChar:'E' atRow:i atColumn:j withAttributes:0];
+                        [displayDelegate displayChar:'E' atRow:i atColumn:j withAttributes:[self attributes]];
                     }
                 }
             }
@@ -717,7 +732,7 @@
     deferredAdvance = NO;
 
     // display the character
-    [displayDelegate displayChar:c atRow:termRow atColumn:termCol withAttributes:0];
+    [displayDelegate displayChar:c atRow:termRow atColumn:termCol withAttributes:[self attributes]];
     
     // if not in final column, advance. Else record that an advance was deferred
     if(termCol < terminalColumns) {
