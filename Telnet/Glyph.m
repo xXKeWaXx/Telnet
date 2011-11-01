@@ -10,6 +10,8 @@
 
 @implementation Glyph
 
+@synthesize isUnderlined;
+
 + (UIColor *)termBlackColor { return [UIColor colorWithRed:0.f green:0.f blue:0.f alpha:1.f]; }
 + (UIColor *)termDarkGrayColor { return [UIColor colorWithRed:127.f/255.f green:127.f/255.f blue:127.f/255.f alpha:1.f]; }
 
@@ -104,6 +106,16 @@
     CGContextRef context = UIGraphicsGetCurrentContext();
     CGContextSaveGState(context);
     CGContextSetAllowsAntialiasing(context, NO);
+    
+    // draw an underline if required
+    if(isUnderlined == YES) {
+        CGContextSetStrokeColorWithColor(context, self.textColor.CGColor);
+        CGContextMoveToPoint(context, 0.f, kGlyphHeight - 1.f);
+        CGContextAddLineToPoint(context, kGlyphWidth - 1.f, kGlyphHeight - 1.f);
+        CGContextClosePath(context);
+        CGContextStrokePath(context);         
+    }
+        
     [super drawRect:rect];
     CGContextRestoreGState(context);
 }

@@ -14,7 +14,14 @@
 
     // array of arrays containing glyphs; screen memory
     NSMutableArray *terminalRows;
+    int terminalColumns;
     
+    UIFont *normalFont;
+    UIFont *boldFont;
+    
+    uint16_t currentAttributes;
+    GlyphColor defaultBackgroundColor;
+    GlyphColor defaultForegroundColor;
     GlyphColor backgroundColor;
     GlyphColor foregroundColor;
 }

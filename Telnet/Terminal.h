@@ -39,6 +39,10 @@
     BOOL modeDECAWM;    // auto wrap mode
     BOOL modeDECRAWM;   // reverse auto wrap
     BOOL modeDECSCNM;   // screen light mode
+    
+    glyphAttributes currentAttributes;
+    GlyphColor foregroundColor;
+    GlyphColor backgroundColor;
 }
 
 @property id<DisplayDelegate> __weak displayDelegate;

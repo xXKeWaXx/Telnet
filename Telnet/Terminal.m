@@ -137,38 +137,32 @@
     modeDECOM = NO;
     modeDECAWM = NO;
     modeDECRAWM = NO;
-    modeDECSCNM = NO;
+    
+    foregroundColor = kGlyphColorDefault;
+    backgroundColor = kGlyphColorDefault;
+    currentAttributes = 0;
     
     // cause glyphs to be created and laid out for the display
     [displayDelegate resetScreenWithRows:terminalRows andColumns:terminalColumns];
 }
 
-- (glyphAttributes)attributes {
-
-    glyphAttributes currentAttributes = 0;
-    
-    if(modeDECSCNM) currentAttributes |= kModeDECSCNM;
-    
-    return currentAttributes;
-}
-
 - (void)eraseRow:(int)row {
     for(int i = 1; i <= terminalColumns; i++) {
-        [displayDelegate displayChar:0x20 atRow:row atColumn:i withAttributes:[self attributes]];
+        [displayDelegate displayChar:0x20 atRow:row atColumn:i];
     }
 }
 
 - (void)clearCursorLeft {
     // clear from start of row to cursor inclusive
     for(int i = 1; i <= termCol; i++) {
-        [displayDelegate displayChar:0x20 atRow:termRow atColumn:i withAttributes:[self attributes]];
+        [displayDelegate displayChar:0x20 atRow:termRow atColumn:i];
     }
 }
 
 - (void)clearCursorRight {
     // clear from cursor to end of row inclusive
     for(int i = termCol; i <= terminalColumns; i++) {
-        [displayDelegate displayChar:0x20 atRow:termRow atColumn:i withAttributes:[self attributes]];
+        [displayDelegate displayChar:0x20 atRow:termRow atColumn:i];
     }
 }
 
@@ -396,8 +390,9 @@
 //                        [_displayDelegate setColumns:132];
                         break;
                     case 5:
-                        // Send: <27> [ ? 5 h Reverse Video (DECSCNM).  
-                        modeDECSCNM = YES;
+                        // Send: <27> [ ? 5 h Reverse Video (DECSCNM).
+                        currentAttributes |= kModeInverse;
+                        [displayDelegate setAttributes:currentAttributes foreground:foregroundColor background:backgroundColor];
                         break;
 
                     case 6:
@@ -450,7 +445,8 @@
                         break;
                     case 5:
                         // Send: <27> [ ? 5 l Normal Video (DECSCNM).  
-                        modeDECSCNM = NO;                        
+                        currentAttributes &= ~kModeInverse;
+                        [displayDelegate setAttributes:currentAttributes foreground:foregroundColor background:backgroundColor];
                         break;
                     case 6:
                         // Send: <27> [ ? 6 l Normal Cursor Mode (DECOM). 
@@ -484,18 +480,108 @@
             
         case 'm': // set display attributes
         {
-            NSLog(@"You're not seeing this?");
             if(len == 0) {
-                NSLog(@"reset to plain text");
+                
+                currentAttributes = 0;
+                foregroundColor = kGlyphColorDefault;
+                backgroundColor = kGlyphColorDefault;
             } else {
+
                 arguments = [self parseNumerics:sequence length:len];
                 unsigned char *bytes = [arguments mutableBytes];
-                if(*bytes == 0) {
-                    NSLog(@"reset to plain text");
-                } else {
-                    NSLog(@"setting some fancy text");
+                
+                for(int i = 0; i < len; i++) {
+                    uint8_t c = *(bytes + i);
+                    switch(c) {
+                        case 0: // normal
+                            currentAttributes = 0;
+                            break;
+                        case 1: // bold
+                            currentAttributes |= kModeBold;
+                            break;
+                        case 4: // underscore
+                            currentAttributes |= kModeUnderscore;
+                            break;
+                        case 5: // blink
+                            currentAttributes |= kModeBlink;
+                            break;
+                        case 7: // inverse
+                            currentAttributes |= kModeInverse;
+                            break;
+                        case 22: // normal (bold, faint off)
+                            currentAttributes &= ~kModeBold;
+                            currentAttributes &= ~kModeBlink;
+                            break;
+                        case 24: // underline off
+                            currentAttributes &= ~kModeUnderscore;
+                            break;
+                        case 25: // blink off
+                            currentAttributes &= kModeBold;
+                            break;
+                        case 27: // inverse off
+                            currentAttributes &= kModeInverse;
+                            break;
+                        case 30: // fg black
+                            foregroundColor = kGlyphColorBlack;
+                            break;
+                        case 31: // fg red
+                            foregroundColor = kGlyphColorRed;
+                            break;
+                        case 32: // fg green
+                            foregroundColor = kGlyphColorGreen;
+                            break;
+                        case 33: // fg yellow
+                            foregroundColor = kGlyphColorYellow;
+                            break;
+                        case 34: // fg blue
+                            foregroundColor = kGlyphColorBlue;
+                            break;
+                        case 35: // fg magenta
+                            foregroundColor = kGlyphColorMagenta;
+                            break;
+                        case 36: // fg cyan
+                            foregroundColor = kGlyphColorCyan;
+                            break;
+                        case 37: // fg white
+                            foregroundColor = kGlyphColorGray;
+                            break;
+                        case 39: // fg default
+                            foregroundColor = kGlyphColorDefault;
+                            break;
+                        case 40: // bg black
+                            backgroundColor = kGlyphColorBlack;
+                            break;
+                        case 41: // bg red
+                            backgroundColor = kGlyphColorRed;
+                            break;
+                        case 42: // bg green
+                            backgroundColor = kGlyphColorGreen;
+                            break;
+                        case 43: // bg yellow
+                            backgroundColor = kGlyphColorYellow;
+                            break;
+                        case 44: // bg blue
+                            backgroundColor = kGlyphColorBlue;
+                            break;
+                        case 45: // bg magenta
+                            backgroundColor = kGlyphColorMagenta;
+                            break;
+                        case 46: // bg cyan
+                            backgroundColor = kGlyphColorCyan;
+                            break;
+                        case 47: // bg white
+                            backgroundColor = kGlyphColorGray;
+                            break;
+                        case 49: // bg default
+                            backgroundColor = kGlyphColorDefault;
+                            break;
+                        default:
+                            NSLog(@"Unknown parameter for CSI m: %d", c);
+                            break;
+                    }
                 }
             }
+            [displayDelegate setAttributes:currentAttributes foreground:foregroundColor background:backgroundColor];
         }
             break;
         case 'r': // set top and bottom margins DECSTBM
@@ -680,7 +766,7 @@
                 // test mode; fill screen with 'E' chars (DECALN)
                 for(int i = (modeDECOM ? 1 : topRow); i <= (modeDECOM ? bottomRow : terminalRows); i++) {
                     for(int j = 1; j < terminalColumns; j++) {
-                        [displayDelegate displayChar:'E' atRow:i atColumn:j withAttributes:[self attributes]];
+                        [displayDelegate displayChar:'E' atRow:i atColumn:j];
                     }
                 }
             }
@@ -732,7 +818,7 @@
     deferredAdvance = NO;
 
     // display the character
-    [displayDelegate displayChar:c atRow:termRow atColumn:termCol withAttributes:[self attributes]];
+    [displayDelegate displayChar:c atRow:termRow atColumn:termCol];
     
     // if not in final column, advance. Else record that an advance was deferred
     if(termCol < terminalColumns) {

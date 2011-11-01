@@ -7,6 +7,7 @@
 //
 
 #import <UIKit/UIKit.h>
+#import "DisplayDelegate.h"
 
 #define kGlyphFontSize (15.f)
 #define kGlyphWidth (9.f)
@@ -20,25 +21,13 @@ typedef enum _intensity {
     
 } GlyphIntensity;
 
-typedef enum _color {
-    // normal           // high intensity
-    kGlyphColorBlack,   // dark gray
-    kGlyphColorRed,
-    kGlyphColorGreen,
-    kGlyphColorYellow,
-    kGlyphColorBlue,
-    kGlyphColorMagenta,
-    kGlyphColorCyan,
-    kGlyphColorGray
-    
-} GlyphColor;
-
 @interface Glyph : UILabel {
 
     GlyphColor color;
     GlyphIntensity intensity;
     int row;
     int column;
+    BOOL isUnderlined;
     
 }
 
@@ -62,5 +51,7 @@ typedef enum _color {
 + (UIColor *)termWhiteColor;
 
 + (UIColor *)UIColorWithGlyphColor:(GlyphColor)glyphColor intensity:(BOOL)intense;
+
+@property BOOL isUnderlined;
 
 @end

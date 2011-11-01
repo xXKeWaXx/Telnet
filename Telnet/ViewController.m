@@ -7,10 +7,10 @@
 //
 
 #import "ViewController.h"
-#import "TelnetConnection.h"
 #import "Display.h"
 #import "Parser.h"
 #import "Terminal.h"
+#import "TelnetConnection.h"
 
 //#import "TerminalView.h"
 //#import "TerminalIdentity.h"
@@ -98,6 +98,8 @@
 //    [connection open:@"mud.genesismud.org" port:3011];
 //    [connection open:@"nethack.alt.org" port:23];
 //    [connection open:@"sporkhack.com" port:23];
+//    [connection open:@"nethack.eu" port:23];
+
     [connection read];
 //    [connection read];
 //    [connection read];

@@ -24,15 +24,19 @@ static inline int colIndex(int colNum) { return colNum - 1; }
     
     // set up the glyphs for the requested size
     terminalRows = [NSMutableArray array];
+    terminalColumns = cols;
     
     NSMutableArray *terminalArray;
     CGFloat xPos = 0.f;
     CGFloat yPos = 0.f;
     int i, j;
     
-    backgroundColor = kGlyphColorBlack;
-    foregroundColor = kGlyphColorGreen;
+    backgroundColor = defaultBackgroundColor = kGlyphColorBlack;
+    foregroundColor = defaultForegroundColor = kGlyphColorGreen;
     
+    normalFont = [UIFont fontWithName:@"CourierNewPSMT" size:kGlyphFontSize];
+    boldFont = [UIFont fontWithName:@"CourierNewPS-BoldMT" size:kGlyphFontSize];
+
     // terminal rows are numbered from 1..kTerminalRows
     for(i = 1; i <= rows; i++) {
         
@@ -42,7 +46,7 @@ static inline int colIndex(int colNum) { return colNum - 1; }
         for(j = 1; j <= cols; j++) {
             
             Glyph *glyph = [[Glyph alloc] initWithFrame:CGRectMake(xPos, yPos, kGlyphWidth, kGlyphHeight)];
-            glyph.font = [UIFont fontWithName:@"Courier New" size:kGlyphFontSize];
+            glyph.font = normalFont;
             glyph.text = nil;
             glyph.textColor = [Glyph UIColorWithGlyphColor:foregroundColor intensity:NO];
             glyph.backgroundColor = [Glyph UIColorWithGlyphColor:backgroundColor intensity:NO];
@@ -79,26 +83,59 @@ static inline int colIndex(int colNum) { return colNum - 1; }
     [self clearDisplay];
 }
 
-- (void)displayChar:(uint8_t)c 
-              atRow:(int)row 
-           atColumn:(int)col 
-     withAttributes:(glyphAttributes)attributes {
+- (void)setAttributes:(uint16_t)attributes foreground:(GlyphColor)fg background:(GlyphColor)bg {
+ 
+    currentAttributes = attributes;
+
+    if(fg == kGlyphColorDefault)
+        foregroundColor = defaultForegroundColor;
+    else 
+        foregroundColor = fg;
     
-    if((row > 24) || (col > 80))
+    if(bg == kGlyphColorDefault)
+        backgroundColor = defaultBackgroundColor;
+    else
+        backgroundColor = bg;
+}
+
+- (void)displayChar:(uint8_t)c atRow:(int)row atColumn:(int)col {
+    
+    if((row > [terminalRows count]) || (col > terminalColumns))
         return;
     
     Glyph *glyph = [[terminalRows objectAtIndex:rowIndex(row)] 
                               objectAtIndex:colIndex(col)];
     
     // check attributes, set display
-    if(attributes & kModeDECSCNM) {
-        glyph.backgroundColor = [Glyph UIColorWithGlyphColor:foregroundColor intensity:(attributes & kModeIntensity)];
-        glyph.textColor = [Glyph UIColorWithGlyphColor:backgroundColor intensity:(attributes & kModeIntensity)];
-    } else {
-        glyph.textColor = [Glyph UIColorWithGlyphColor:foregroundColor intensity:(attributes & kModeIntensity)];
-        glyph.backgroundColor = [Glyph UIColorWithGlyphColor:backgroundColor intensity:(attributes & kModeIntensity)];
+    if(currentAttributes & kModeIntensity) {
         
     }
+    
+    if(currentAttributes & kModeInverse) {
+        glyph.backgroundColor = [Glyph UIColorWithGlyphColor:foregroundColor intensity:(currentAttributes & kModeIntensity)];
+        glyph.textColor = [Glyph UIColorWithGlyphColor:backgroundColor intensity:(currentAttributes & kModeIntensity)];
+    } else {
+        glyph.textColor = [Glyph UIColorWithGlyphColor:foregroundColor intensity:(currentAttributes & kModeIntensity)];
+        glyph.backgroundColor = [Glyph UIColorWithGlyphColor:backgroundColor intensity:(currentAttributes & kModeIntensity)];
+    }
+
+    if(currentAttributes & kModeBold) {
+        glyph.font = boldFont;
+    } else {
+        glyph.font = normalFont;
+    }
+
+    if(currentAttributes & kModeUnderscore) {
+        glyph.isUnderlined = YES;
+    } else {
+        glyph.isUnderlined = NO;
+    }
+
+    if(currentAttributes & kModeBlink) {
+        
+    }
+    
+
     
         
 
