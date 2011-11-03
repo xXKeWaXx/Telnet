@@ -13,7 +13,7 @@ typedef uint16_t glyphAttributes;
 #define kModeIntensity  (0x0001)
 #define kModeInverse    (0x0002)
 #define kModeBold       (0x0004)
-#define kModeUnderscore (0x0008)
+#define kModeUnderline  (0x0008)
 #define kModeBlink      (0x0010)
 
 typedef enum _color {

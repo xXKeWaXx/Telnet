@@ -489,18 +489,20 @@
 
                 arguments = [self parseNumerics:sequence length:len];
                 unsigned char *bytes = [arguments mutableBytes];
+                len = [arguments length];
                 
                 for(int i = 0; i < len; i++) {
                     uint8_t c = *(bytes + i);
                     switch(c) {
                         case 0: // normal
+                        case COMMAND_DEFAULT_VALUE:
                             currentAttributes = 0;
                             break;
                         case 1: // bold
                             currentAttributes |= kModeBold;
                             break;
-                        case 4: // underscore
-                            currentAttributes |= kModeUnderscore;
+                        case 4: // underline
+                            currentAttributes |= kModeUnderline;
                             break;
                         case 5: // blink
                             currentAttributes |= kModeBlink;
@@ -510,16 +512,15 @@
                             break;
                         case 22: // normal (bold, faint off)
                             currentAttributes &= ~kModeBold;
-                            currentAttributes &= ~kModeBlink;
                             break;
                         case 24: // underline off
-                            currentAttributes &= ~kModeUnderscore;
+                            currentAttributes &= ~kModeUnderline;
                             break;
                         case 25: // blink off
-                            currentAttributes &= kModeBold;
+                            currentAttributes &= ~kModeBlink;
                             break;
                         case 27: // inverse off
-                            currentAttributes &= kModeInverse;
+                            currentAttributes &= ~kModeInverse;
                             break;
                         case 30: // fg black
                             foregroundColor = kGlyphColorBlack;
@@ -758,6 +759,10 @@
     }
     
     switch(finalChar) {
+        case '7': {
+            NSLog(@"DEC 7 - save cursor?");
+        }
+            break;
         case '8': {
             if(len == 0) {
                 // restore cursor previously saved attributes
@@ -774,7 +779,7 @@
             break;
             
         case 'B':
-            NSLog(@"What is B supposed to do?");
+            NSLog(@"could be selecting character set - DEC ( B");
             break;
         case 'D': { // IND cursor index
             [self advanceRow];

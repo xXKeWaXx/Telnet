@@ -93,6 +93,19 @@
     return bgColor;
 }
 
+- (void)toggleBlink:(BOOL)blink {
+    
+    if(blink == YES) {
+
+        foregroundColor = self.textColor;
+        self.textColor = self.backgroundColor;
+        
+    } else {
+        
+        self.textColor = foregroundColor;
+    }
+}
+
 // set glyph to the current erase state, with no text set
 - (void)eraseWithBG:(GlyphColor)background {
     

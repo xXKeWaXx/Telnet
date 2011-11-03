@@ -24,6 +24,9 @@
     GlyphColor defaultForegroundColor;
     GlyphColor backgroundColor;
     GlyphColor foregroundColor;
+    
+    NSTimer *blinkTimer;
+    NSMutableArray *blinkArray;
 }
 
 + (CGSize)sizeForRows:(int)rows andColumns:(int)cols;

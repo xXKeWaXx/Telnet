@@ -25,6 +25,8 @@ typedef enum _intensity {
 
     GlyphColor color;
     GlyphIntensity intensity;
+    UIColor *foregroundColor;
+//    UIColor *bgColor;
     int row;
     int column;
     BOOL isUnderlined;
@@ -51,6 +53,8 @@ typedef enum _intensity {
 + (UIColor *)termWhiteColor;
 
 + (UIColor *)UIColorWithGlyphColor:(GlyphColor)glyphColor intensity:(BOOL)intense;
+
+- (void)toggleBlink:(BOOL)blink;
 
 @property BOOL isUnderlined;
 

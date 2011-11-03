@@ -20,6 +20,18 @@
 static inline int rowIndex(int rowNum) { return rowNum - 1; }
 static inline int colIndex(int colNum) { return colNum - 1; }
 
+- (void)toggleBlink:(NSTimer *)blinkTimer {
+    
+    static BOOL blink = YES;
+    
+    (blink == YES) ? (blink = NO) : (blink = YES);
+    
+    for(Glyph *glyph in blinkArray) {
+
+        [glyph toggleBlink:blink];
+    }
+}
+
 - (void)resetScreenWithRows:(int)rows andColumns:(int)cols {
     
     // set up the glyphs for the requested size
@@ -34,6 +46,9 @@ static inline int colIndex(int colNum) { return colNum - 1; }
     backgroundColor = defaultBackgroundColor = kGlyphColorBlack;
     foregroundColor = defaultForegroundColor = kGlyphColorGreen;
     
+    blinkArray = [NSMutableArray arrayWithCapacity:rows * cols];
+    blinkTimer = [NSTimer scheduledTimerWithTimeInterval:0.5 target:self selector:@selector(toggleBlink:) userInfo:nil repeats:YES];
+
     normalFont = [UIFont fontWithName:@"CourierNewPSMT" size:kGlyphFontSize];
     boldFont = [UIFont fontWithName:@"CourierNewPS-BoldMT" size:kGlyphFontSize];
 
@@ -112,11 +127,13 @@ static inline int colIndex(int colNum) { return colNum - 1; }
     }
     
     if(currentAttributes & kModeInverse) {
-        glyph.backgroundColor = [Glyph UIColorWithGlyphColor:foregroundColor intensity:(currentAttributes & kModeIntensity)];
+        glyph.backgroundColor = 
+            [Glyph UIColorWithGlyphColor:foregroundColor intensity:(currentAttributes & kModeIntensity)];
         glyph.textColor = [Glyph UIColorWithGlyphColor:backgroundColor intensity:(currentAttributes & kModeIntensity)];
     } else {
+        glyph.backgroundColor = 
+            [Glyph UIColorWithGlyphColor:backgroundColor intensity:(currentAttributes & kModeIntensity)];
         glyph.textColor = [Glyph UIColorWithGlyphColor:foregroundColor intensity:(currentAttributes & kModeIntensity)];
-        glyph.backgroundColor = [Glyph UIColorWithGlyphColor:backgroundColor intensity:(currentAttributes & kModeIntensity)];
     }
 
     if(currentAttributes & kModeBold) {
@@ -125,22 +142,19 @@ static inline int colIndex(int colNum) { return colNum - 1; }
         glyph.font = normalFont;
     }
 
-    if(currentAttributes & kModeUnderscore) {
+    if(currentAttributes & kModeUnderline) {
         glyph.isUnderlined = YES;
     } else {
         glyph.isUnderlined = NO;
     }
 
     if(currentAttributes & kModeBlink) {
-        
+        [blinkArray addObject:glyph];
+    } else {
+        [blinkArray removeObject:glyph];
     }
-    
-
-    
-        
 
     glyph.text = [NSString stringWithFormat:@"%c", c];
-
 }
 
 // save the outgoing row to the scrollback buffer, move top row to bottom (reuse) and move all glyphs up
