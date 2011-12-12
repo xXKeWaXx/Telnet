@@ -48,4 +48,6 @@
 @property id<DisplayDelegate> __weak displayDelegate;
 @property id<ConnectionDelegate> __weak connectionDelegate;
 
+- (void)setRows:(int)rows andColumns:(int)columns;
+
 @end

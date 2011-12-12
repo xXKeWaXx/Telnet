@@ -31,4 +31,7 @@
 
 + (CGSize)sizeForRows:(int)rows andColumns:(int)cols;
 
+- (CGFloat)glyphHeight;
+- (CGFloat)glyphWidth;
+
 @end

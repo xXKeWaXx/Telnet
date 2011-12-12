@@ -15,6 +15,10 @@
 //#import "TerminalView.h"
 //#import "TerminalIdentity.h"
 
+@interface ViewController (private)
+- (void)calculateAvailableDisplayDimensions;
+@end
+
 @implementation ViewController
 
 - (void)didReceiveMemoryWarning
@@ -42,31 +46,46 @@
     textView.text = @"X";
 }
 // UITextViewDelegate ends
-
-- (void)keyPressed:(NSNotification*)notification {
- 
-}
           
+- (void)setDisplayRows:(int)rows andColumns:(int)columns {
+
+    CGSize displaySize = [Display sizeForRows:rows andColumns:columns];
+    // centre terminal within the screen on a pixel boundary
+    CGFloat displayOrigin = floorf((availableWidth - displaySize.width) / 2);
+
+    // switch terminal to handle new row & column count
+    [terminal setRows:rows andColumns:columns];
+    
+    // size display for rows and columns
+    display.frame = CGRectMake(displayOrigin, 0.f, displaySize.width, displaySize.height);
+    
+    // input text view needs to be somewhere hidden. This should probably move to behind the telnet window
+    inputTextView = [[UITextView alloc] initWithFrame:CGRectZero];
+}
+
+- (void)sizeDisplayToFit {
+    
+    // use as many rows and columns of the current glyph size as fit in the current orientation
+    [self calculateAvailableDisplayDimensions];
+    
+    // read row & column from user prefs initially
+    CGFloat glyphHeight = [display glyphHeight];
+    CGFloat glyphWidth = [display glyphWidth];
+    int rows = floorf(availableHeight / glyphHeight) - 1;
+    int columns = availableWidth / glyphWidth;
+    
+    [self setDisplayRows:rows andColumns:columns];
+
+}
 #pragma mark - View lifecycle
 
 - (void)viewDidLoad
 {
     [super viewDidLoad];
 
-    [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(keyPressed:) name:UITextInputCurrentInputModeDidChangeNotification object: nil];
-    
-
-//    [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(keyPressed:) name: UITextFieldTextDidChangeNotification object: nil];
-//    [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(keyPressed:) name: UITextViewTextDidChangeNotification object: nil];
-    
-    CGSize displaySize = [Display sizeForRows:24 andColumns:80];
-    CGFloat displayOrigin = (768 - displaySize.width) / 2;
-    Display *display = [[Display alloc] initWithFrame:CGRectMake(displayOrigin,
-                                                                 displayOrigin,
-                                                                 displaySize.width,
-                                                                 displaySize.height)];
+    [self.view setBackgroundColor:[UIColor blackColor]];
+    display = [[Display alloc] initWithFrame:CGRectZero]; 
     [self.view addSubview:display];
-
 
     connection = [[TelnetConnection alloc] init];
     [connection setOptions:nil];
@@ -78,16 +97,15 @@
     terminal.displayDelegate = display;
     terminal.connectionDelegate = connection;
 
+    [self sizeDisplayToFit];
     
-    inputTextView = [[UITextView alloc] initWithFrame:CGRectMake(displayOrigin, 
-                                                                 displayOrigin + displaySize.height + 10, 
-                                                                 displaySize.width, 
-                                                                 18.f)];
     inputTextView.text = @"X";
     inputTextView.delegate = self;
     [self.view addSubview:inputTextView];
     [inputTextView becomeFirstResponder];
 
+    [self.view bringSubviewToFront:display];
+    
         // enable telnet
         // sudo sh-3.2# launchctl
         // launchd% load -F /System/Library/LaunchDaemons/telnet.plist
@@ -132,10 +150,39 @@
 	[super viewDidDisappear:animated];
 }
 
+// Screen rotation
 - (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
 {
     // Return YES for supported orientations
     return YES;
+}
+
+- (void)calculateAvailableDisplayDimensions {
+    
+    switch(self.interfaceOrientation) {
+            
+        case UIInterfaceOrientationPortrait:
+        case UIInterfaceOrientationPortraitUpsideDown:
+            keyboardHeight = 264.f;
+            availableWidth = 768.f;
+            availableHeight = 1024.f - keyboardHeight - keyboardAdditionHeight;
+            break;
+        default:
+            keyboardHeight = 352.f;
+            availableWidth = 1024.f;
+            availableHeight = 768.f - keyboardHeight - keyboardAdditionHeight;
+            break;
+    }
+}
+
+- (void)willRotateToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation duration:(NSTimeInterval)duration {
+
+    
+}
+
+- (void)didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation {
+
+    [self sizeDisplayToFit];
 }
 
 @end

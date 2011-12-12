@@ -23,6 +23,8 @@ typedef enum _intensity {
 
 @interface Glyph : UILabel {
 
+    // glyphs should be created with the right frame by the display object
+
     GlyphColor color;
     GlyphIntensity intensity;
     UIColor *foregroundColor;

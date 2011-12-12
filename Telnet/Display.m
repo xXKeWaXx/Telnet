@@ -16,6 +16,15 @@
     return displaySize;
 }
 
+- (CGFloat)glyphHeight {
+    return kGlyphHeight;
+}
+
+- (CGFloat)glyphWidth {
+    return kGlyphWidth;
+}
+
+
 // to avoid off-by-1 errors, array access is always done through these functions
 static inline int rowIndex(int rowNum) { return rowNum - 1; }
 static inline int colIndex(int colNum) { return colNum - 1; }
@@ -24,7 +33,10 @@ static inline int colIndex(int colNum) { return colNum - 1; }
     
     static BOOL blink = YES;
     
-    (blink == YES) ? (blink = NO) : (blink = YES);
+    if(blink == YES)
+        blink = NO;
+    else
+        blink = YES;
     
     for(Glyph *glyph in blinkArray) {
 

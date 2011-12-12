@@ -18,14 +18,21 @@
 @synthesize displayDelegate;
 @synthesize connectionDelegate;
 
+/*
 - (id)init {
 
     self = [super init];
     if(self != nil) {
-        terminalRows = kTerminalRows;
-        terminalColumns = kTerminalColumns;
     }
     return self;
+}
+*/
+
+- (void)setRows:(int)rows andColumns:(int)columns {
+
+    terminalRows = rows;
+    terminalColumns = columns;
+
 }
 
 - (void)logCommand:(NSMutableData *)data {

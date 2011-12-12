@@ -30,6 +30,7 @@ typedef enum _color {
 } GlyphColor;
 
 @protocol DisplayDelegate <NSObject>
+
 - (void)resetScreenWithRows:(int)rows andColumns:(int)cols;
 - (void)displayChar:(uint8_t)c atRow:(int)row atColumn:(int)col;
 - (void)setAttributes:(uint16_t)attributes foreground:(GlyphColor)fg background:(GlyphColor)bg;
