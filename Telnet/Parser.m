@@ -101,10 +101,18 @@ typedef enum _TerminalDataState {
     return takeState;
 }
 
+#define kTelnetMaxAtomLen 200
+
 - (void)processAtoms {
     
     unsigned char *c = (unsigned char *)[incomingData bytes];
     int len = [incomingData length];
+    int processedLen = len;
+    
+    if(len > kTelnetMaxAtomLen) {
+        len = kTelnetMaxAtomLen;
+    }
+//    NSLog(@"len in processAtoms is %d", len);
     
     TerminalDataState state = kStateGround;
     TerminalDataState transitionState;
@@ -306,6 +314,8 @@ typedef enum _TerminalDataState {
         }
     }
     
+    [incomingData replaceBytesInRange:NSMakeRange(0, processedLen) withBytes:NULL length:0];
+
     if([param length] > 0) {
         // a command is still being received, save and append the rest as it appears
         incomingData = param;

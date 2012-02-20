@@ -744,7 +744,7 @@
             break;
 
         default:
-            NSLog(@"Unhandled ANSI command sequence finalChar %c", finalChar);
+//            NSLog(@"Unhandled ANSI command sequence finalChar %c", finalChar);
             break;
     }
     
@@ -786,7 +786,7 @@
             break;
             
         case 'B':
-            NSLog(@"could be selecting character set - DEC ( B");
+//            NSLog(@"could be selecting character set - DEC ( B");
             break;
         case 'D': { // IND cursor index
             [self advanceRow];
@@ -807,7 +807,7 @@
         }
             break;
         default:
-            NSLog(@"Unhandled DEC command sequence %c", finalChar);
+//            NSLog(@"Unhandled DEC command sequence %c", finalChar);
             break;
     }
 }
@@ -874,7 +874,6 @@
             }
             if(tab == 0)
                 tab = terminalColumns;
-            NSLog(@"tabbed to col %d", tab);
             [self setRow:termRow andColumn:tab];
         }
             break;
@@ -883,7 +882,6 @@
             [self decrementColumn];
             break;
         case kTelnetCharBEL:
-            NSLog(@"ding!");
             break;
         case kTelnetCharNUL:
         default:

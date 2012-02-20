@@ -23,7 +23,7 @@
 		66AE054813FFC51900DF9D41 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 66AE054713FFC51900DF9D41 /* AppDelegate.m */; };
 		66AE054B13FFC51900DF9D41 /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 66AE054A13FFC51900DF9D41 /* ViewController.m */; };
 		66AE054E13FFC51900DF9D41 /* ViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 66AE054C13FFC51900DF9D41 /* ViewController.xib */; };
-		66AE055713FFC53D00DF9D41 /* GCDAsyncSocket.m in Sources */ = {isa = PBXBuildFile; fileRef = 66AE055613FFC53D00DF9D41 /* GCDAsyncSocket.m */; };
+		66AE055713FFC53D00DF9D41 /* GCDAsyncSocket.m in Sources */ = {isa = PBXBuildFile; fileRef = 66AE055613FFC53D00DF9D41 /* GCDAsyncSocket.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		66AE055913FFC58400DF9D41 /* CFNetwork.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 66AE055813FFC58400DF9D41 /* CFNetwork.framework */; };
 		66AE055C13FFC60100DF9D41 /* TelnetConnection.m in Sources */ = {isa = PBXBuildFile; fileRef = 66AE055B13FFC60100DF9D41 /* TelnetConnection.m */; };
 		66AE056C13FFE4B200DF9D41 /* Glyph.m in Sources */ = {isa = PBXBuildFile; fileRef = 66AE056B13FFE4B200DF9D41 /* Glyph.m */; };
